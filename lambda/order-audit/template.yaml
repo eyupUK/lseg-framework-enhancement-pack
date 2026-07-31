@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Order audit Lambda with least-privilege S3 access
+
+Resources:
+  AuditBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  OrderAuditFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: handler.lambda_handler
+      Runtime: python3.12
+      Timeout: 10
+      MemorySize: 256
+      Environment:
+        Variables:
+          AUDIT_BUCKET: !Ref AuditBucket
+      Policies:
+        - S3WritePolicy:
+            BucketName: !Ref AuditBucket
+      Events:
+        AuditApi:
+          Type: Api
+          Properties:
+            Path: /order-audits
+            Method: post
+
+  AuditLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${OrderAuditFunction}
+      RetentionInDays: 30

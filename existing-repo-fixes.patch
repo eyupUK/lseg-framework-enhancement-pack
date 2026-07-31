@@ -1,0 +1,64 @@
+diff --git a/pom.xml b/pom.xml
+--- a/pom.xml
++++ b/pom.xml
+@@ -16,6 +16,8 @@
+     <module>services-tests/orders-api-tests</module>
+     <!-- Pact provider verification -->
+     <module>pact-provider-verification</module>
++    <!-- LSEG-role practice: AWS, resilience and observability tests -->
++    <module>quality-engineering-tests</module>
+   </modules>
+ 
+diff --git a/services-tests/orders-api-tests/src/test/java/com/example/tests/orders/Orders_Api_Crud_Test.java b/services-tests/orders-api-tests/src/test/java/com/example/tests/orders/Orders_Api_Crud_Test.java
+--- a/services-tests/orders-api-tests/src/test/java/com/example/tests/orders/Orders_Api_Crud_Test.java
++++ b/services-tests/orders-api-tests/src/test/java/com/example/tests/orders/Orders_Api_Crud_Test.java
+@@ -77,10 +77,14 @@ public class Orders_Api_Crud_Test extends BaseApiTest {
+         given()
+                 .spec(spec())
+                 .when()
+-                .get("/orders/" + orderId)
++                .delete("/orders/" + orderId)
+                 .then()
+-                .spec(okJson())
+-                .body(matchesJsonSchemaInClasspath(SchemaValidatorUtil.schemaPath("orders", "get-order-v1.json")));
++                .spec(okJson());
++
++        given().spec(spec())
++                .when().get("/orders/" + orderId)
++                .then().spec(notFoundJson());
+     }
+ 
+ 
+diff --git a/.github/workflows/build-and-verify.yml b/.github/workflows/build-and-verify.yml
+--- a/.github/workflows/build-and-verify.yml
++++ b/.github/workflows/build-and-verify.yml
+@@ -1,9 +1,9 @@
+ name: Build and Verify
+ 
+ on:
+   push:
+-    branches: [ wip ]
++    branches: [ main ]
+   pull_request:
+-    branches: [ wip ]
++    branches: [ main ]
+ 
+diff --git a/.github/workflows/api-tests-matrix.yml b/.github/workflows/api-tests-matrix.yml
+--- a/.github/workflows/api-tests-matrix.yml
++++ b/.github/workflows/api-tests-matrix.yml
+@@ -1,9 +1,9 @@
+ name: API Tests Matrix
+ 
+ on:
+   push:
+-    branches: [ wip ]
++    branches: [ main ]
+   pull_request:
+-    branches: [ wip ]
++    branches: [ main ]
+@@ -11,7 +11,7 @@ jobs:
+       fail-fast: false
+       matrix:
+-        service: [ "services/users-api-tests", "services/orders-api-tests" ]
++        service: [ "services-tests/users-api-tests", "services-tests/orders-api-tests" ]
+         env: [ "dev", "staging" ]
