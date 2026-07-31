@@ -14,8 +14,8 @@ jobs:
   java-fast-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -24,7 +24,7 @@ jobs:
         run: mvn -B -pl quality-engineering-tests -am test
       - name: Upload test reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: java-test-reports
           path: '**/target/surefire-reports/**'
@@ -32,12 +32,7 @@ jobs:
   containerised-api-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-          cache: maven
+      - uses: actions/checkout@v7
       - name: Detect parent service framework
         id: parent_framework
         shell: bash
@@ -69,6 +64,13 @@ jobs:
             echo "available=false" >> "$GITHUB_OUTPUT"
             echo "::notice title=Parent service checks skipped::This overlay does not include the parent service modules or a Compose file."
           fi
+      - name: Set up Java
+        if: steps.parent_framework.outputs.available == 'true'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
       - name: Build service jars
         if: steps.parent_framework.outputs.available == 'true'
         run: mvn -B -DskipTests package -pl services/users-service,services/orders-service
@@ -99,8 +101,8 @@ jobs:
   python-lambda-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
           cache: pip
@@ -111,8 +113,8 @@ jobs:
   terraform-static-validation:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
       - working-directory: infrastructure/terraform
         run: terraform fmt -check -recursive
       - working-directory: infrastructure/terraform
