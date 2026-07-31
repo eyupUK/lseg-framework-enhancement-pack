@@ -175,7 +175,7 @@ The script exits non-zero if compatibility is unknown or rejected after its conf
 
 | Job | Check |
 |---|---|
-| `dependency-review` | Pull-request dependency changes fail on high or critical known vulnerabilities |
+| `dependency-review` | Pull-request and push dependency changes fail on high or critical known vulnerabilities in runtime or development scopes |
 | `repository-security-scan` | Trivy secret and Terraform/SAM/Kubernetes misconfiguration scan, failing on high or critical findings |
 
 The Lambda job also runs Ruff, Bandit, and `pip-audit` before pytest. Qodana fails its separate workflow when it reports any inspection problem. Require these checks in branch protection after the first successful run.

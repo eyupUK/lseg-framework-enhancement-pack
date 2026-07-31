@@ -41,10 +41,10 @@ The pack treats its automated checks as merge gates. Configure branch protection
 | Lambda tests | `LSEG Quality Gates / python-lambda-tests` | Any Moto handler test failure |
 | Terraform validation | `LSEG Quality Gates / terraform-static-validation` | Terraform is unformatted or invalid |
 | Static code analysis | `Qodana / qodana` | Qodana reports any inspection problem |
-| Dependency review | `Security Gates / dependency-review` | A pull request adds a dependency with a high or critical known vulnerability |
+| Dependency review | `Security Gates / dependency-review` | A pull request or push adds a runtime or development dependency with a high or critical known vulnerability |
 | IaC and secret scan | `Security Gates / repository-security-scan` | Trivy finds a high or critical secret or infrastructure misconfiguration |
 
-The security scan examines Terraform, SAM, and Kubernetes manifests. It is deliberately configured to fail on high and critical findings, so new exceptions require a documented and reviewed risk decision rather than an inline suppression. Dependency Review runs only on pull requests because it compares the change against the pull-request base branch.
+The security scan examines Terraform, SAM, and Kubernetes manifests. It is deliberately configured to fail on high and critical findings, so new exceptions require a documented and reviewed risk decision rather than an inline suppression. Dependency Review compares the pull-request branches or, on a push, the event's preceding commit and current commit. It skips only a manual dispatch or an initial branch push without a preceding commit.
 
 ### Resilience Behaviour
 
