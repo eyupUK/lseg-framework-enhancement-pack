@@ -41,10 +41,10 @@ The pack treats its automated checks as merge gates. Configure branch protection
 | Lambda tests | `LSEG Quality Gates / python-lambda-tests` | Any Moto handler test failure |
 | Terraform validation | `LSEG Quality Gates / terraform-static-validation` | Terraform is unformatted or invalid |
 | Static code analysis | `Qodana / qodana` | Qodana reports any inspection problem |
-| Dependency review | `Security Gates / dependency-review` | A pull request or push adds a runtime or development dependency with a high or critical known vulnerability |
+| Dependency vulnerability scan | `Security Gates / repository-security-scan` | Trivy finds a high or critical vulnerability in a declared Maven dependency |
 | IaC and secret scan | `Security Gates / repository-security-scan` | Trivy finds a high or critical secret or infrastructure misconfiguration |
 
-The security scan examines Terraform, SAM, and Kubernetes manifests. It is deliberately configured to fail on high and critical findings, so new exceptions require a documented and reviewed risk decision rather than an inline suppression. Dependency Review compares the pull-request branches or, on a push, the event's preceding commit and current commit. It skips only a manual dispatch or an initial branch push without a preceding commit.
+The security scan examines Maven dependencies plus Terraform, SAM, and Kubernetes manifests. Python requirements are audited separately by `pip-audit` in the Lambda job. The scanners are deliberately configured to fail on high and critical findings, so new exceptions require a documented and reviewed risk decision rather than an inline suppression. This gate does not depend on GitHub's repository-level Dependency Graph setting.
 
 ### Resilience Behaviour
 

@@ -73,7 +73,7 @@ For complete commands, deployment prerequisites, expected behaviour, and limitat
 
 ## Delivery Model
 
-The GitHub Actions workflows run standalone Java tests, strict Qodana inspection analysis, Python linting/security/dependency audits and tests, Terraform formatting/validation, pull-request dependency review, and Trivy secret/IaC scanning on pushes and pull requests to `main`. They run containerised API and observability checks only when the parent service modules and a Compose file are present; otherwise the job reports that those checks are not applicable. They do not deploy AWS resources, apply Kubernetes manifests, run k6, or invoke the Pact deployment gate; wire those steps into an environment-specific release pipeline after configuring credentials, state, image publishing, and Pact Broker access.
+The GitHub Actions workflows run standalone Java tests, strict Qodana inspection analysis, Python linting/security/dependency audits and tests, Terraform formatting/validation, and Trivy dependency-vulnerability, secret, and IaC scanning on pushes and pull requests to `main`. They run containerised API and observability checks only when the parent service modules and a Compose file are present; otherwise the job reports that those checks are not applicable. They do not deploy AWS resources, apply Kubernetes manifests, run k6, or invoke the Pact deployment gate; wire those steps into an environment-specific release pipeline after configuring credentials, state, image publishing, and Pact Broker access.
 
 ## Important Limits
 
