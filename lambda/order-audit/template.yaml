@@ -3,9 +3,36 @@ Transform: AWS::Serverless-2016-10-31
 Description: Order audit Lambda with least-privilege S3 access
 
 Resources:
+  AuditKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: Encryption key for order audit records
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowAccountAdministration
+            Effect: Allow
+            Principal:
+              AWS: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:root
+            Action: kms:*
+            Resource: '*'
+
+  AuditKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: alias/order-audit
+      TargetKeyId: !Ref AuditKey
+
   AuditBucket:
     Type: AWS::S3::Bucket
     Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              KMSMasterKeyID: !GetAtt AuditKey.Arn
+              SSEAlgorithm: aws:kms
+            BucketKeyEnabled: true
       VersioningConfiguration:
         Status: Enabled
       PublicAccessBlockConfiguration:
@@ -28,6 +55,10 @@ Resources:
       Policies:
         - S3WritePolicy:
             BucketName: !Ref AuditBucket
+        - Statement:
+            - Effect: Allow
+              Action: kms:GenerateDataKey
+              Resource: !GetAtt AuditKey.Arn
       Events:
         AuditApi:
           Type: Api

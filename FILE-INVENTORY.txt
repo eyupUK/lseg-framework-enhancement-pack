@@ -1,6 +1,7 @@
 .devcontainer/PODMAN.md
 .devcontainer/devcontainer.json
 .github/workflows/lseg-quality-gates.yml
+.github/workflows/security-gates.yml
 FILE-INVENTORY.txt
 README-LSEG-ENHANCEMENTS.md
 docs/FRAMEWORK-GUIDE.md

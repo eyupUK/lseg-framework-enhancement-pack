@@ -107,8 +107,16 @@ jobs:
           python-version: '3.12'
           cache: pip
           cache-dependency-path: lambda/order-audit/requirements-dev.txt
-      - run: pip install -r lambda/order-audit/requirements-dev.txt
-      - run: pytest -q lambda/order-audit/tests
+      - name: Install Lambda test and quality dependencies
+        run: python -m pip install -r lambda/order-audit/requirements-dev.txt
+      - name: Ruff quality gate
+        run: ruff check lambda/order-audit
+      - name: Bandit security gate
+        run: bandit -q -r lambda/order-audit -x lambda/order-audit/tests
+      - name: Python dependency audit
+        run: pip-audit -r lambda/order-audit/requirements-dev.txt
+      - name: Lambda tests
+        run: pytest -q lambda/order-audit/tests
 
   terraform-static-validation:
     runs-on: ubuntu-latest

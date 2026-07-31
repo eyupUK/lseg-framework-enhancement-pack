@@ -1,6 +1,5 @@
 import importlib.util
 import json
-import os
 from pathlib import Path
 
 import boto3
@@ -57,3 +56,15 @@ def test_rejects_missing_required_fields(monkeypatch):
 
     assert response["statusCode"] == 400
     assert "required" in json.loads(response["body"])["message"]
+
+
+@mock_aws
+def test_rejects_a_non_object_json_body(monkeypatch):
+    monkeypatch.setenv("AWS_DEFAULT_REGION", "eu-west-2")
+    monkeypatch.setenv("AUDIT_BUCKET", BUCKET)
+    _create_bucket()
+
+    response = handler.lambda_handler({"body": "[]"}, None)
+
+    assert response["statusCode"] == 400
+    assert "JSON object" in json.loads(response["body"])["message"]

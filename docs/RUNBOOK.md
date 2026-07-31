@@ -56,6 +56,9 @@ The CI workflow waits for these endpoints before invoking the API suites. Retain
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -r lambda/order-audit/requirements-dev.txt
+ruff check lambda/order-audit
+bandit -q -r lambda/order-audit -x lambda/order-audit/tests
+pip-audit -r lambda/order-audit/requirements-dev.txt
 pytest -q lambda/order-audit/tests
 ```
 
@@ -82,7 +85,7 @@ terraform plan -var='environment=dev' -out=tfplan
 terraform apply tfplan
 ```
 
-The bucket name contains the AWS account ID and the selected environment. Configure a remote state backend, encryption, and access controls before using `apply` for a shared environment. The module creates no Lambda function; its `lambda_role_arn` output is an example hand-off value, not an active integration.
+The bucket name contains the AWS account ID and the selected environment. The module encrypts audit records with a customer-managed KMS key. Configure a remote state backend and environment-specific access controls before using `apply` for a shared environment. The module creates no Lambda function; its `lambda_role_arn` output is an example hand-off value, not an active integration.
 
 Destroy only an environment that this configuration owns and only after confirming the audit-data retention requirement:
 
@@ -167,5 +170,14 @@ The script exits non-zero if compatibility is unknown or rejected after its conf
 | `containerised-api-tests` | Package services, start Compose, health checks, API tests, and observability smoke test |
 | `python-lambda-tests` | Pytest/Moto Lambda tests |
 | `terraform-static-validation` | Terraform formatting, backend-free initialization, and validation |
+
+`.github/workflows/security-gates.yml` adds the following required security controls:
+
+| Job | Check |
+|---|---|
+| `dependency-review` | Pull-request dependency changes fail on high or critical known vulnerabilities |
+| `repository-security-scan` | Trivy secret and Terraform/SAM/Kubernetes misconfiguration scan, failing on high or critical findings |
+
+The Lambda job also runs Ruff, Bandit, and `pip-audit` before pytest. Qodana fails its separate workflow when it reports any inspection problem. Require these checks in branch protection after the first successful run.
 
 The Java, Lambda, and Terraform jobs run in this repository. The containerised job detects whether the parent framework's Maven modules and Compose file exist, and emits a successful not-applicable result when they do not. Configure branch protection to require the jobs that apply to your release process. Add separate release jobs for image publication, real AWS checks, `terraform plan/apply`, Kubernetes rollout verification, k6, and `can-i-deploy`; those actions require environment-specific credentials and approval controls.

@@ -28,7 +28,7 @@ def _parse_payload(event: dict[str, Any]) -> dict[str, Any]:
     if isinstance(body, str):
         body = json.loads(body)
     if not isinstance(body, dict):
-        raise ValueError("Request body must be a JSON object")
+        raise TypeError("Request body must be a JSON object")
     return body
 
 
@@ -40,7 +40,7 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
 
     try:
         payload = _parse_payload(event)
-    except (ValueError, json.JSONDecodeError) as exc:
+    except (TypeError, ValueError, json.JSONDecodeError) as exc:
         return _response(400, {"message": str(exc)})
 
     order_id = payload.get("orderId")

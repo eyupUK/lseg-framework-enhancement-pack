@@ -29,6 +29,23 @@ The diagram shows responsibilities, not a deployed topology. In particular, the 
 
 All JVM tests run by default. `ObservabilitySmokeTest` is skipped unless `orders.baseUrl` is set. `LocalStackS3IntegrationTest` is skipped when Docker is unavailable through `@Testcontainers(disabledWithoutDocker = true)`.
 
+## Quality And Security Gates
+
+The pack treats its automated checks as merge gates. Configure branch protection on `main` to require the checks below; the parent-service checks remain conditionally applicable because this repository does not contain the parent services.
+
+| Gate | Workflow | Failure Condition |
+|---|---|---|
+| JVM tests | `LSEG Quality Gates / java-fast-tests` | Any Maven test failure |
+| Lambda quality | `LSEG Quality Gates / python-lambda-tests` | Ruff reports a lint or import error |
+| Lambda security | `LSEG Quality Gates / python-lambda-tests` | Bandit finds a source-code security issue or `pip-audit` finds a vulnerable pinned dependency |
+| Lambda tests | `LSEG Quality Gates / python-lambda-tests` | Any Moto handler test failure |
+| Terraform validation | `LSEG Quality Gates / terraform-static-validation` | Terraform is unformatted or invalid |
+| Static code analysis | `Qodana / qodana` | Qodana reports any inspection problem |
+| Dependency review | `Security Gates / dependency-review` | A pull request adds a dependency with a high or critical known vulnerability |
+| IaC and secret scan | `Security Gates / repository-security-scan` | Trivy finds a high or critical secret or infrastructure misconfiguration |
+
+The security scan examines Terraform, SAM, and Kubernetes manifests. It is deliberately configured to fail on high and critical findings, so new exceptions require a documented and reviewed risk decision rather than an inline suppression. Dependency Review runs only on pull requests because it compares the change against the pull-request base branch.
+
 ### Resilience Behaviour
 
 `CircuitBreakerBehaviourTest` uses a count-based window of four calls and opens at a 50 percent failure rate. Its controlled downstream first fails four times, then verifies that the open circuit does not call the downstream, and finally proves two successful half-open calls close it.
@@ -55,11 +72,11 @@ The handler does not deduplicate at-least-once delivery. A caller that resends t
 
 ### Terraform
 
-`infrastructure/terraform` is an alternative infrastructure example. It creates a versioned, public-access-blocked audit bucket and an IAM role with `s3:PutObject` restricted to `orders/*`. It deliberately does not create a Lambda function, attach the role to one, configure CloudWatch Logs access, configure encryption, or set up remote state. Do not combine the Terraform role with the SAM function without making role ownership and logging permissions explicit.
+`infrastructure/terraform` is an alternative infrastructure example. It creates a versioned, public-access-blocked audit bucket encrypted with a customer-managed KMS key, plus an IAM role whose writes are restricted to `orders/*` and which can generate data keys for that key. It deliberately does not create a Lambda function, attach the role to one, configure CloudWatch Logs access, or set up remote state. Do not combine the Terraform role with the SAM function without making role ownership and logging permissions explicit.
 
 ### Kubernetes
 
-The Kustomize base deploys two replicas each of users and orders, cluster-internal Services, CPU/memory requests and limits, and Actuator readiness/liveness probes. It references `sample/users-service:local` and `sample/orders-service:local`; substitute images published to a registry accessible to the target cluster. The parent applications must expose `/actuator/health/readiness` and `/actuator/health/liveness` before these manifests can become ready.
+The Kustomize base deploys two replicas each of users and orders, cluster-internal Services, CPU/memory requests and limits, and Actuator readiness/liveness probes. Workloads run as UID/GID `10001` with a default seccomp profile, no Linux capabilities, no privilege escalation, and a read-only root filesystem; each receives an `emptyDir` mount at `/tmp`. It references `sample/users-service:local` and `sample/orders-service:local`; substitute images published to a registry accessible to the target cluster that can run as this non-root user. The parent applications must expose `/actuator/health/readiness` and `/actuator/health/liveness` before these manifests can become ready.
 
 ### Observability
 
@@ -83,7 +100,7 @@ The patch modifies an existing order CRUD test from an incorrect GET assertion t
 ## Production Hardening Checklist
 
 - Use a remote, encrypted Terraform state backend with locking before any shared-environment apply.
-- Add encryption, lifecycle/retention, data classification, and access logging decisions for audit objects.
+- Confirm lifecycle/retention, data classification, and access logging decisions for audit objects. The supplied deployment paths use customer-managed KMS encryption.
 - Give the Lambda an explicit execution role with CloudWatch Logs permissions, and avoid two tools managing the same bucket or role.
 - Pin and scan production Python dependencies instead of relying on a runtime-provided SDK.
 - Define idempotency and replay semantics at the event boundary; retain the correlation ID across service, Lambda, and audit record logs.
