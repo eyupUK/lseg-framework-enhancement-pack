@@ -6,6 +6,7 @@ README-LSEG-ENHANCEMENTS.md
 docs/FRAMEWORK-GUIDE.md
 docs/RUNBOOK.md
 existing-repo-fixes.patch
+pom.xml
 infrastructure/terraform/main.tf
 infrastructure/terraform/outputs.tf
 infrastructure/terraform/variables.tf

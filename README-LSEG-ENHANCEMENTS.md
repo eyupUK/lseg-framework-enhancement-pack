@@ -1,6 +1,6 @@
 # LSEG Quality Engineering Enhancement Pack
 
-This is an overlay for the `springboot-microservices-framework`; it is not a standalone application. Copy it into that repository to add quality-engineering examples without replacing the existing Rest Assured, Pact, WireMock, Allure, service, or Compose structure.
+This pack has a standalone Maven reactor for its own quality-engineering tests and can also be overlaid onto `springboot-microservices-framework`. The parent framework remains necessary for the service API, Compose, Pact, WireMock, and Allure workflows.
 
 The overlay assumes the parent framework provides:
 
@@ -29,14 +29,14 @@ From the root of the parent repository:
 
 ```bash
 unzip lseg-framework-enhancement-pack.zip -d /tmp/lseg-pack
-cp -R /tmp/lseg-pack/lseg-framework-enhancement-pack/. .
+rsync -a --exclude 'pom.xml' /tmp/lseg-pack/lseg-framework-enhancement-pack/ ./
 git apply existing-repo-fixes.patch
 git diff --check
 ```
 
 The patch registers `quality-engineering-tests`, corrects the order-delete assertion, and changes the existing workflow branch/path settings to match `main` and `services-tests`.
 
-Review all overlay and patch changes before committing. The pack intentionally does not overwrite the parent framework's root `pom.xml`, Compose file, application configuration, or service images.
+The pack's root `pom.xml` is for standalone quality-test execution; do not copy it over the parent framework's root POM. Review all overlay and patch changes before committing. The pack does not include the parent Compose file, application configuration, or service images.
 
 ## Quick Verification
 
@@ -73,7 +73,7 @@ For complete commands, deployment prerequisites, expected behaviour, and limitat
 
 ## Delivery Model
 
-The GitHub Actions workflow runs Java tests, containerised API/observability tests, Python tests, and Terraform formatting/validation on pushes and pull requests to `main`. It does not deploy AWS resources, apply Kubernetes manifests, run k6, or invoke the Pact deployment gate; wire those steps into an environment-specific release pipeline after configuring credentials, state, image publishing, and Pact Broker access.
+The GitHub Actions workflow runs the standalone Java tests, Python tests, and Terraform formatting/validation on pushes and pull requests to `main`. It runs containerised API and observability checks only when the parent service modules and a Compose file are present; otherwise the job reports that those checks are not applicable. It does not deploy AWS resources, apply Kubernetes manifests, run k6, or invoke the Pact deployment gate; wire those steps into an environment-specific release pipeline after configuring credentials, state, image publishing, and Pact Broker access.
 
 ## Important Limits
 

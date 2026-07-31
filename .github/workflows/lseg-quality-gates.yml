@@ -38,23 +38,62 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
+      - name: Detect parent service framework
+        id: parent_framework
+        shell: bash
+        run: |
+          required_paths=(
+            services/users-service/pom.xml
+            services/orders-service/pom.xml
+            services-tests/users-api-tests/pom.xml
+            services-tests/orders-api-tests/pom.xml
+          )
+          compose_files=(compose.yml compose.yaml docker-compose.yml docker-compose.yaml)
+          missing_paths=()
+
+          for path in "${required_paths[@]}"; do
+            [[ -f "$path" ]] || missing_paths+=("$path")
+          done
+
+          has_compose=false
+          for compose_file in "${compose_files[@]}"; do
+            if [[ -f "$compose_file" ]]; then
+              has_compose=true
+              break
+            fi
+          done
+
+          if [[ "${#missing_paths[@]}" -eq 0 && "$has_compose" == true ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Parent service checks skipped::This overlay does not include the parent service modules or a Compose file."
+          fi
       - name: Build service jars
+        if: steps.parent_framework.outputs.available == 'true'
         run: mvn -B -DskipTests package -pl services/users-service,services/orders-service
       - name: Start services
+        if: steps.parent_framework.outputs.available == 'true'
         run: docker compose up -d --build
       - name: Wait for health
+        if: steps.parent_framework.outputs.available == 'true'
         run: |
           timeout 120 bash -c 'until curl -fsS http://localhost:8080/actuator/health >/dev/null; do sleep 2; done'
           timeout 120 bash -c 'until curl -fsS http://localhost:8081/actuator/health >/dev/null; do sleep 2; done'
       - name: Run Rest Assured API suites
+        if: steps.parent_framework.outputs.available == 'true'
         run: mvn -B -Denv=dev -pl services-tests/users-api-tests,services-tests/orders-api-tests -am test
       - name: Observability smoke test
+        if: steps.parent_framework.outputs.available == 'true'
         run: mvn -B -pl quality-engineering-tests -Dtest=ObservabilitySmokeTest -Dorders.baseUrl=http://localhost:8081 test
+      - name: Parent service checks not applicable
+        if: steps.parent_framework.outputs.available != 'true'
+        run: echo "Parent service checks are not applicable to the standalone enhancement pack."
       - name: Service logs
-        if: failure()
+        if: ${{ failure() && steps.parent_framework.outputs.available == 'true' }}
         run: docker compose logs
       - name: Stop services
-        if: always()
+        if: ${{ always() && steps.parent_framework.outputs.available == 'true' }}
         run: docker compose down -v
 
   python-lambda-tests:

@@ -1,6 +1,6 @@
 # Runbook
 
-Run these commands from the parent framework root after copying this pack and applying `existing-repo-fixes.patch`.
+Run the quality-test and Lambda commands from this repository root. Run parent-service commands after copying the pack into the parent framework and applying `existing-repo-fixes.patch`.
 
 ## Prerequisites
 
@@ -168,4 +168,4 @@ The script exits non-zero if compatibility is unknown or rejected after its conf
 | `python-lambda-tests` | Pytest/Moto Lambda tests |
 | `terraform-static-validation` | Terraform formatting, backend-free initialization, and validation |
 
-The workflow needs the parent framework's Maven modules and Compose file. Configure branch protection to require the jobs that apply to your release process. Add separate release jobs for image publication, real AWS checks, `terraform plan/apply`, Kubernetes rollout verification, k6, and `can-i-deploy`; those actions require environment-specific credentials and approval controls.
+The Java, Lambda, and Terraform jobs run in this repository. The containerised job detects whether the parent framework's Maven modules and Compose file exist, and emits a successful not-applicable result when they do not. Configure branch protection to require the jobs that apply to your release process. Add separate release jobs for image publication, real AWS checks, `terraform plan/apply`, Kubernetes rollout verification, k6, and `can-i-deploy`; those actions require environment-specific credentials and approval controls.

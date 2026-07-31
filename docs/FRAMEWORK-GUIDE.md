@@ -2,7 +2,7 @@
 
 ## Purpose And Boundaries
 
-The pack extends a pre-existing Java microservices test framework. The parent framework remains responsible for service implementation, service Compose configuration, API contracts, Pact provider verification, WireMock stubs, Allure reporting, and the Maven reactor. This repository adds focused examples around those boundaries rather than a second application platform.
+The pack extends a pre-existing Java microservices test framework. Its root Maven reactor runs the added quality-test module by itself; the parent framework remains responsible for service implementation, service Compose configuration, API contracts, Pact provider verification, WireMock stubs, and Allure reporting. This repository adds focused examples around those boundaries rather than a second application platform.
 
 ```text
 users service :8080 <---- orders service :8081 <---- API and k6 tests
