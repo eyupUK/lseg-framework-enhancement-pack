@@ -1,25 +1,23 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version='1.0' encoding='utf-8'?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-
   <parent>
     <groupId>com.example</groupId>
     <artifactId>ra-microservices-framework</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
-
   <artifactId>quality-engineering-tests</artifactId>
   <name>quality-engineering-tests</name>
-
   <properties>
     <aws.sdk.version>2.27.21</aws.sdk.version>
     <testcontainers.version>1.21.4</testcontainers.version>
     <resilience4j.version>2.2.0</resilience4j.version>
     <awaitility.version>4.2.2</awaitility.version>
+    <mockito.version>5.15.2</mockito.version>
+    <jackson.version>2.18.2</jackson.version>
+    <pact.version>4.6.21</pact.version>
   </properties>
-
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -31,7 +29,6 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-
   <dependencies>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -84,13 +81,37 @@
       <artifactId>rest-assured</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>au.com.dius.pact.consumer</groupId>
+      <artifactId>junit5</artifactId>
+      <version>${pact.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
-
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <useSystemClassLoader>false</useSystemClassLoader>
+          <systemPropertyVariables>
+            <pact.rootDir>${project.build.directory}/pacts</pact.rootDir>
+            <pact_do_not_track>true</pact_do_not_track>
+          </systemPropertyVariables>
+        </configuration>
       </plugin>
     </plugins>
   </build>
