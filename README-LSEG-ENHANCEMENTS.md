@@ -15,6 +15,7 @@ The overlay assumes the parent framework provides:
 |---|---|
 | AWS emulation | Testcontainers and LocalStack S3 integration test |
 | Serverless audit | Python order-audit Lambda, SAM template, and Moto unit tests |
+| Order/inventory component | HTTP inventory reservation service, order HTTP gateway, component integration tests, and Pact consumer contract |
 | Resilience | Deterministic Resilience4j circuit-breaker and retry tests |
 | Observability | Actuator/Prometheus smoke test and optional Prometheus/Jaeger stack |
 | Delivery gates | GitHub Actions quality, dependency, secret, and IaC security gates plus a Pact Broker `can-i-deploy` script |

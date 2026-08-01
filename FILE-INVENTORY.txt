@@ -23,8 +23,12 @@ observability/docker-compose.observability.yml
 observability/prometheus.yml
 performance/k6/orders-load.js
 quality-engineering-tests/pom.xml
+quality-engineering-tests/src/main/java/com/example/quality/order/HttpInventoryGateway.java
+quality-engineering-tests/src/test/java/com/example/quality/contract/InventoryConsumerPactTest.java
 quality-engineering-tests/src/test/java/com/example/quality/aws/LocalStackS3IntegrationTest.java
 quality-engineering-tests/src/test/java/com/example/quality/observability/ObservabilitySmokeTest.java
+quality-engineering-tests/src/test/java/com/example/quality/inventory/InventoryComponentServer.java
+quality-engineering-tests/src/test/java/com/example/quality/order/OrderInventoryIntegrationTest.java
 quality-engineering-tests/src/test/java/com/example/quality/resilience/CircuitBreakerBehaviourTest.java
 quality-engineering-tests/src/test/java/com/example/quality/resilience/RetryBehaviourTest.java
 scripts/can-i-deploy.sh

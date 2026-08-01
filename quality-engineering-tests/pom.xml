@@ -15,7 +15,7 @@
     <resilience4j.version>2.2.0</resilience4j.version>
     <awaitility.version>4.2.2</awaitility.version>
     <mockito.version>5.15.2</mockito.version>
-    <jackson.version>2.18.2</jackson.version>
+    <jackson.version>2.18.8</jackson.version>
     <pact.version>4.6.21</pact.version>
   </properties>
   <dependencyManagement>
@@ -91,7 +91,6 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
       <version>${jackson.version}</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>au.com.dius.pact.consumer</groupId>

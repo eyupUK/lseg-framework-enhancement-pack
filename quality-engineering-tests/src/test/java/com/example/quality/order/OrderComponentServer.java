@@ -8,12 +8,14 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 final class OrderComponentServer implements AutoCloseable {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final OrderService orderService;
+    private final ExecutorService executor = Executors.newCachedThreadPool();
     private HttpServer server;
 
     OrderComponentServer(OrderService orderService) {
@@ -23,7 +25,7 @@ final class OrderComponentServer implements AutoCloseable {
     void start() throws IOException {
         server = HttpServer.create(new InetSocketAddress(0), 0);
         server.createContext("/orders", this::handleOrders);
-        server.setExecutor(Executors.newCachedThreadPool());
+        server.setExecutor(executor);
         server.start();
     }
 
@@ -78,5 +80,6 @@ final class OrderComponentServer implements AutoCloseable {
         if (server != null) {
             server.stop(0);
         }
+        executor.shutdownNow();
     }
 }

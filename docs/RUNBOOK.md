@@ -26,12 +26,16 @@ mvn -pl quality-engineering-tests -am test
 # A focused resilience example.
 mvn -pl quality-engineering-tests -Dtest=CircuitBreakerBehaviourTest test
 
+# Run the in-process order and inventory HTTP integration plus its Pact contract.
+mvn -pl quality-engineering-tests \
+  -Dtest=OrderInventoryIntegrationTest,InventoryConsumerPactTest test
+
 # Run the observability test against the running orders service.
 mvn -pl quality-engineering-tests -Dtest=ObservabilitySmokeTest \
   -Dorders.baseUrl=http://localhost:8081 test
 ```
 
-The observability test is intentionally skipped without `orders.baseUrl`; this makes the normal JVM suite runnable without starting the application. The LocalStack test is an emulator test, not a substitute for an AWS environment test.
+The observability test is intentionally skipped without `orders.baseUrl`; this makes the normal JVM suite runnable without starting the application. The order/inventory component and Pact tests run without external services; their Pact file is written under `quality-engineering-tests/target/pacts`. The LocalStack test is an emulator test, not a substitute for an AWS environment test.
 
 ## Parent Service And API Checks
 
