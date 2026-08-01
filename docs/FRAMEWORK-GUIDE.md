@@ -49,10 +49,11 @@ The pack treats its automated checks as merge gates. Configure branch protection
 | Lambda tests | `LSEG Quality Gates / python-lambda-tests` | Any Moto handler test failure |
 | Terraform validation | `LSEG Quality Gates / terraform-static-validation` | Terraform is unformatted or invalid |
 | Static code analysis | `Qodana / qodana` | Qodana reports any inspection problem |
+| Secret verification | `Security Gates / gitleaks` | Gitleaks finds a secret in the full Git history |
 | Dependency vulnerability scan | `Security Gates / repository-security-scan` | Trivy finds a high or critical vulnerability in a declared Maven dependency |
 | IaC and secret scan | `Security Gates / repository-security-scan` | Trivy finds a high or critical secret or infrastructure misconfiguration |
 
-The security scan examines Maven dependencies plus Terraform, SAM, and Kubernetes manifests. Python requirements are audited separately by `pip-audit` in the Lambda job. The scanners are deliberately configured to fail on high and critical findings, so new exceptions require a documented and reviewed risk decision rather than an inline suppression. This gate does not depend on GitHub's repository-level Dependency Graph setting.
+Gitleaks runs before the remaining security scan and examines the complete Git history, not just the triggering commit. The security scan then examines Maven dependencies plus Terraform, SAM, and Kubernetes manifests. Python requirements are audited separately by `pip-audit` in the Lambda job. The scanners are deliberately configured to fail on high and critical findings, so new exceptions require a documented and reviewed risk decision rather than an inline suppression. Configure `Security Gates / gitleaks` as a required branch-protection check to block merges when it fails.
 
 ### Resilience Behaviour
 

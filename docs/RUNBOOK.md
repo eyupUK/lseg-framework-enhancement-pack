@@ -179,8 +179,9 @@ The script exits non-zero if compatibility is unknown or rejected after its conf
 
 | Job | Check |
 |---|---|
+| `gitleaks` | Full Git-history secret verification; a finding fails before the remaining security scan starts |
 | `repository-security-scan` | Trivy Maven dependency vulnerability, secret, and Terraform/SAM/Kubernetes misconfiguration scan, failing on high or critical findings |
 
-The Lambda job also runs Ruff, Bandit, and `pip-audit` before pytest. Qodana fails its separate workflow when it reports any inspection problem. Require these checks in branch protection after the first successful run.
+The Lambda job also runs Ruff, Bandit, and `pip-audit` before pytest. Qodana fails its separate workflow when it reports any inspection problem. Require these checks in branch protection after the first successful run; in particular, `Security Gates / gitleaks` must be required to prevent a failed secret scan from being merged.
 
 The Java, Lambda, and Terraform jobs run in this repository. The containerised job detects whether the parent framework's Maven modules and Compose file exist, and emits a successful not-applicable result when they do not. Configure branch protection to require the jobs that apply to your release process. Add separate release jobs for image publication, real AWS checks, `terraform plan/apply`, Kubernetes rollout verification, k6, and `can-i-deploy`; those actions require environment-specific credentials and approval controls.
