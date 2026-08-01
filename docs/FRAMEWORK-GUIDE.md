@@ -22,12 +22,20 @@ The diagram shows responsibilities, not a deployed topology. In particular, the 
 |---|---|---|---|
 | Resilience component | `quality-engineering-tests/.../resilience` | Retry count, circuit-open fail-fast behaviour, and half-open recovery | None |
 | AWS integration | `quality-engineering-tests/.../aws` | S3 put/get and correlation metadata through the AWS SDK | Docker and LocalStack |
+| Order/inventory integration | `quality-engineering-tests/.../order` | Order requests cross real HTTP boundaries to reserve stock, handle out-of-stock responses, and preserve idempotency | None |
+| Order/inventory Pact | `quality-engineering-tests/.../contract` | Orders sends the documented reservation request and handles accepted and rejected inventory responses | Pact mock server |
 | Service observability | `quality-engineering-tests/.../observability` | Orders health reports `UP` and Prometheus exposes a JVM metric | Running orders service |
 | Lambda unit | `lambda/order-audit/tests` | Handler validation, S3 object content, and S3 metadata | Moto in-process AWS emulation |
 | Service API integration | Parent `services-tests` modules | Existing users/orders API contracts | Running parent services |
 | Performance smoke | `performance/k6/orders-load.js` | Order-create latency, HTTP errors, and business-response errors under a small ramp | Running orders service |
 
 All JVM tests run by default. `ObservabilitySmokeTest` is skipped unless `orders.baseUrl` is set. `LocalStackS3IntegrationTest` is skipped when Docker is unavailable through `@Testcontainers(disabledWithoutDocker = true)`.
+
+### Order And Inventory Contract
+
+`HttpInventoryGateway` makes the order service's existing `InventoryGateway` dependency concrete. It sends `POST /inventory/reservations` with `sku`, `quantity`, and `idempotencyKey`. An inventory service returns `201` with `{"reserved":true}` when it reserves stock, or `409` with `{"reserved":false}` when the requested quantity is unavailable. Any other status or payload is treated as an integration failure rather than an out-of-stock decision.
+
+`InventoryComponentServer` is an in-process test service with atomic stock decrement and idempotent reservation storage. `OrderInventoryIntegrationTest` starts it beside `OrderComponentServer`, ensuring that an accepted order consumes stock, an unavailable reservation yields the order service's `OUT_OF_STOCK` decision, and a retry does not reserve stock twice. `InventoryConsumerPactTest` writes the two orders-to-inventory interactions to `quality-engineering-tests/target/pacts/orders-service-inventory-service.json` for publication or provider verification in the parent release pipeline.
 
 ## Quality And Security Gates
 
