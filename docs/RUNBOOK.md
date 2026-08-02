@@ -169,7 +169,7 @@ The script exits non-zero if compatibility is unknown or rejected after its conf
 
 ### GitHub Actions Release Gate
 
-`Pact Release Gate` is a manually dispatched workflow. Select the deployment environment, then enter the pacticipant name and the released application version. Configure `PACT_BROKER_BASE_URL` and `PACT_BROKER_TOKEN` as secrets on each corresponding GitHub Environment. The workflow uses that environment, so its configured approval rules apply before the compatibility check runs. A failed compatibility check fails the `Check Pact deployment compatibility` step; place a deployment step after it, or make a deployment job depend on `release-contract-gate`, to enforce the gate.
+`Pact Release Gate` runs automatically when a tag matching `v*` is pushed and can also be dispatched manually. In either case, it checks `orders-service`, the tagged commit SHA, and the `production` environment unless manual inputs override them. Configure `PACT_BROKER_BASE_URL` and `PACT_BROKER_TOKEN` as secrets on the corresponding GitHub Environment. The workflow uses that environment, so its configured approval rules apply before the compatibility check runs. A failed compatibility check fails the `Check Pact deployment compatibility` step; place a deployment step after it, or make a deployment job depend on `release-contract-gate`, to enforce the gate.
 
 ## CI Gate Coverage
 

@@ -1,10 +1,14 @@
 name: Pact Release Gate
 
 run-name: >-
-  Pact release gate: ${{ inputs.pacticipant }} ${{ inputs.application_version }}
-  to ${{ inputs.target_environment }}
+  Pact release gate: ${{ inputs.pacticipant || 'orders-service' }}
+  ${{ inputs.application_version || github.sha }}
+  to ${{ inputs.target_environment || 'production' }}
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       pacticipant:
@@ -13,24 +17,26 @@ on:
         default: orders-service
         type: string
       application_version:
-        description: Released pacticipant version to check
-        required: true
+        description: Released pacticipant version to check (defaults to the selected commit SHA)
+        required: false
         type: string
       target_environment:
         description: Target deployment environment
         required: true
         default: production
-        type: environment
+        type: string
 
 permissions:
   contents: read
 
 jobs:
   release-contract-gate:
-    name: Can ${{ inputs.pacticipant }} deploy to ${{ inputs.target_environment }}?
+    name: >-
+      Can ${{ inputs.pacticipant || 'orders-service' }} deploy to
+      ${{ inputs.target_environment || 'production' }}?
     runs-on: ubuntu-latest
     environment:
-      name: ${{ inputs.target_environment }}
+      name: ${{ inputs.target_environment || 'production' }}
     steps:
       - uses: actions/checkout@v7
       - name: Install Pact Broker CLI
@@ -39,7 +45,7 @@ jobs:
         env:
           PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
           PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
-          PACTICIPANT: ${{ inputs.pacticipant }}
-          APPLICATION_VERSION: ${{ inputs.application_version }}
-          TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
+          PACTICIPANT: ${{ inputs.pacticipant || 'orders-service' }}
+          APPLICATION_VERSION: ${{ inputs.application_version || github.sha }}
+          TARGET_ENVIRONMENT: ${{ inputs.target_environment || 'production' }}
         run: ./scripts/can-i-deploy.sh
