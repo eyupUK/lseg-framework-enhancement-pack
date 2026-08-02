@@ -29,6 +29,50 @@ jobs:
           name: java-test-reports
           path: '**/target/surefire-reports/**'
 
+  publish-pact-contracts:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: java-fast-tests
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Generate consumer Pact contracts
+        run: >-
+          mvn -B -pl quality-engineering-tests -am
+          -Dtest=InventoryConsumerPactTest,OrdersConsumerPactTest
+          test
+      - name: Install Pact Broker CLI
+        uses: pact-foundation/pact-broker-cli@v0.8.6
+      - name: Verify Pact Broker publication configuration
+        env:
+          PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
+          PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+        run: |
+          missing=()
+          [[ -n "$PACT_BROKER_BASE_URL" ]] || missing+=(PACT_BROKER_BASE_URL)
+          [[ -n "$PACT_BROKER_TOKEN" ]] || missing+=(PACT_BROKER_TOKEN)
+
+          if [[ "${#missing[@]}" -gt 0 ]]; then
+            echo "::error title=Pact Broker configuration missing::Add ${missing[*]} as secrets to the production GitHub Environment."
+            exit 2
+          fi
+      - name: Publish consumer Pact contracts
+        env:
+          PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
+          PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+        run: >-
+          pact-broker-cli publish
+          --consumer-app-version "$GITHUB_SHA"
+          --branch "$GITHUB_REF_NAME"
+          quality-engineering-tests/target/pacts/*.json
+
   containerised-api-tests:
     runs-on: ubuntu-latest
     steps:

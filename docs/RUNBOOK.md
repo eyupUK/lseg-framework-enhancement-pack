@@ -194,9 +194,11 @@ The script exits non-zero if compatibility is unknown or rejected after its conf
 | Secret | Value |
 |---|---|
 | `PACT_BROKER_BASE_URL` | HTTPS base URL of the Pact Broker or PactFlow tenant |
-| `PACT_BROKER_TOKEN` | Token with permission to query deployment compatibility |
+| `PACT_BROKER_TOKEN` | Read/write token that can publish consumer contracts and query deployment compatibility |
 
-The workflow uses the selected environment, so its configured approval rules apply before the compatibility check runs. Its `Verify Pact Broker configuration` step reports any missing secret by name without printing its value. A failed compatibility check fails the `Check Pact deployment compatibility` step; place a deployment step after it, or make a deployment job depend on `release-contract-gate`, to enforce the gate.
+On a push to `main`, the `publish-pact-contracts` job generates and publishes the `orders-service` consumer contract before a release tag is created. The workflow uses the selected environment, so its configured approval rules apply before the compatibility check runs. Its configuration checks report any missing secret by name without printing its value. A failed compatibility check fails the `Check Pact deployment compatibility` step; place a deployment step after it, or make a deployment job depend on `release-contract-gate`, to enforce the gate.
+
+Publishing a consumer contract is not sufficient for `can-i-deploy`: the `inventory-service` provider pipeline must retrieve the published Pact, verify it, and publish a successful verification result. It must also record the versions that are deployed to `production`. This standalone pack contains consumer tests only; provider verification belongs to the parent service framework or the inventory-service repository.
 
 ## CI Gate Coverage
 
@@ -205,6 +207,7 @@ The workflow uses the selected environment, so its configured approval rules app
 | Job | Check |
 |---|---|
 | `java-fast-tests` | Enhancement JVM tests and Surefire report upload |
+| `publish-pact-contracts` | Generates and publishes the orders and dashboard consumer Pact contracts after a push to `main` |
 | `containerised-api-tests` | Parent service Compose/API/observability checks when available; otherwise standalone HTTP component and LocalStack integration tests |
 | `python-lambda-tests` | Pytest/Moto Lambda tests |
 | `terraform-static-validation` | Terraform formatting, backend-free initialization, and validation |
