@@ -1,0 +1,45 @@
+name: Pact Release Gate
+
+run-name: >-
+  Pact release gate: ${{ inputs.pacticipant }} ${{ inputs.application_version }}
+  to ${{ inputs.target_environment }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      pacticipant:
+        description: Pacticipant being deployed
+        required: true
+        default: orders-service
+        type: string
+      application_version:
+        description: Released pacticipant version to check
+        required: true
+        type: string
+      target_environment:
+        description: Target deployment environment
+        required: true
+        default: production
+        type: environment
+
+permissions:
+  contents: read
+
+jobs:
+  release-contract-gate:
+    name: Can ${{ inputs.pacticipant }} deploy to ${{ inputs.target_environment }}?
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.target_environment }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Pact Broker CLI
+        uses: pact-foundation/pact-broker-cli@v0.8.6
+      - name: Check Pact deployment compatibility
+        env:
+          PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
+          PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+          PACTICIPANT: ${{ inputs.pacticipant }}
+          APPLICATION_VERSION: ${{ inputs.application_version }}
+          TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
+        run: ./scripts/can-i-deploy.sh
