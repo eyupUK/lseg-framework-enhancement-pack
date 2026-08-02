@@ -60,14 +60,14 @@ class OrderInventoryIntegrationTest {
 
     @Test
     void shouldNotReserveInventoryTwiceForAnIdempotentOrderRetry() {
-        inventoryServer.setAvailableQuantity("SKU-1", 1);
+        inventoryServer.setAvailableQuantity("SKU-1", 3);
 
         createOrder("order-integration-3", "SKU-1", 1, "corr-integration-3")
                 .statusCode(201);
         createOrder("order-integration-3", "SKU-1", 1, "corr-integration-3")
                 .statusCode(201);
 
-        assertEquals(0, inventoryServer.availableQuantity("SKU-1"));
+        assertEquals(2, inventoryServer.availableQuantity("SKU-1"));
         assertEquals(1, inventoryServer.reservationCount());
     }
 

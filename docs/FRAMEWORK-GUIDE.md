@@ -23,6 +23,7 @@ The diagram shows responsibilities, not a deployed topology. In particular, the 
 | Resilience component | `quality-engineering-tests/.../resilience` | Retry count, circuit-open fail-fast behaviour, and half-open recovery | None |
 | AWS integration | `quality-engineering-tests/.../aws` | S3 put/get and correlation metadata through the AWS SDK | Docker and LocalStack |
 | Order/inventory integration | `quality-engineering-tests/.../order` | Order requests cross real HTTP boundaries to reserve stock, handle out-of-stock responses, and preserve idempotency | None |
+| Order/inventory HTTP client | `quality-engineering-tests/.../order/HttpInventoryGatewayWireMockTest` | Exact request shape plus accepted, rejected, malformed, and unexpected upstream responses | WireMock in-process server |
 | Order/inventory Pact | `quality-engineering-tests/.../contract` | Orders sends the documented reservation request and handles accepted and rejected inventory responses | Pact mock server |
 | Service observability | `quality-engineering-tests/.../observability` | Orders health reports `UP` and Prometheus exposes a JVM metric | Running orders service |
 | Lambda unit | `lambda/order-audit/tests` | Handler validation, S3 object content, and S3 metadata | Moto in-process AWS emulation |
@@ -36,6 +37,8 @@ All JVM tests run by default. `ObservabilitySmokeTest` is skipped unless `orders
 `HttpInventoryGateway` makes the order service's existing `InventoryGateway` dependency concrete. It sends `POST /inventory/reservations` with `sku`, `quantity`, and `idempotencyKey`. An inventory service returns `201` with `{"reserved":true}` when it reserves stock, or `409` with `{"reserved":false}` when the requested quantity is unavailable. Any other status or payload is treated as an integration failure rather than an out-of-stock decision.
 
 `InventoryComponentServer` is an in-process test service with atomic stock decrement and idempotent reservation storage. `OrderInventoryIntegrationTest` starts it beside `OrderComponentServer`, ensuring that an accepted order consumes stock, an unavailable reservation yields the order service's `OUT_OF_STOCK` decision, and a retry does not reserve stock twice. `InventoryConsumerPactTest` writes the two orders-to-inventory interactions to `quality-engineering-tests/target/pacts/orders-service-inventory-service.json` for publication or provider verification in the parent release pipeline.
+
+`HttpInventoryGatewayWireMockTest` isolates the client from the in-process service. It asserts the exact reservation payload and checks that `201`/`reserved:true` is accepted, `409`/`reserved:false` is treated as out of stock, and malformed or unexpected responses are surfaced as integration failures. This test layer avoids credentials, rate limits, and mutable data associated with a public weather API while still exercising the outbound HTTP boundary.
 
 ## Quality And Security Gates
 

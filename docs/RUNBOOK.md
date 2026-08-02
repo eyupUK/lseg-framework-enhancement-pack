@@ -30,6 +30,9 @@ mvn -pl quality-engineering-tests -Dtest=CircuitBreakerBehaviourTest test
 mvn -pl quality-engineering-tests \
   -Dtest=OrderInventoryIntegrationTest,InventoryConsumerPactTest test
 
+# Test the order-to-inventory HTTP client with deterministic WireMock responses.
+mvn -pl quality-engineering-tests -Dtest=HttpInventoryGatewayWireMockTest test
+
 # Run the observability test against the running orders service.
 mvn -pl quality-engineering-tests -Dtest=ObservabilitySmokeTest \
   -Dorders.baseUrl=http://localhost:8081 test
