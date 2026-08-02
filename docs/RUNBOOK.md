@@ -172,6 +172,10 @@ ORDERS_BASE_URL=https://orders.example.internal k6 run performance/k6/orders-loa
 
 The scenario ramps to 10 virtual users, holds for 40 seconds, then ramps down. It fails when HTTP or business-response errors reach 1 percent, p95 reaches 500 ms, or p99 reaches 1 second. Treat these as a smoke-test baseline; select environment-specific thresholds only after collecting representative telemetry.
 
+### Scheduled CI Smoke
+
+`Scheduled k6 Performance Smoke` runs at 03:00 UTC every Monday and can be dispatched manually. Create a `performance` GitHub Environment, then add `ORDERS_BASE_URL` as an environment variable with the HTTP(S) base URL of a non-production orders deployment. A manual dispatch can provide `orders_base_url` to override that value. The target must be reachable from the GitHub-hosted runner; use a self-hosted runner if the environment is private. Each run uploads `k6-orders-load-summary` as an artifact. The workflow is intentionally separate from pull-request checks because it creates orders and applies load to a live endpoint.
+
 ## Pact Deployment Gate
 
 Install the Pact Broker CLI, then supply a released application version and the target deployment environment:
@@ -211,6 +215,7 @@ Publishing a consumer contract is not sufficient for `can-i-deploy`: the `invent
 | `containerised-api-tests` | Parent service Compose/API/observability checks when available; otherwise standalone HTTP component and LocalStack integration tests |
 | `python-lambda-tests` | Pytest/Moto Lambda tests |
 | `terraform-static-validation` | Terraform formatting, backend-free initialization, and validation |
+| `Scheduled k6 Performance Smoke` | Weekly live-environment orders load smoke; requires the `performance` environment `ORDERS_BASE_URL` variable |
 
 `.github/workflows/security-gates.yml` adds the following required security controls:
 
@@ -221,4 +226,4 @@ Publishing a consumer contract is not sufficient for `can-i-deploy`: the `invent
 
 The Lambda job also runs Ruff, Bandit, and `pip-audit` before pytest. Qodana fails its separate workflow when it reports any inspection problem. Require these checks in branch protection after the first successful run; in particular, `Security Gates / gitleaks` must be required to prevent a failed secret scan from being merged.
 
-The Java, Lambda, and Terraform jobs run in this repository. The containerised job runs the standalone component and LocalStack integration suites when the parent framework's Maven modules and Compose file are absent. Configure branch protection to require the jobs that apply to your release process. The `Pact Release Gate` workflow runs on `v*` release tags and can be manually dispatched with environment-scoped credentials. Add separate release jobs for image publication, real AWS checks, `terraform plan/apply`, Kubernetes rollout verification, and k6; those actions require environment-specific credentials and approval controls.
+The Java, Lambda, and Terraform jobs run in this repository. The containerised job runs the standalone component and LocalStack integration suites when the parent framework's Maven modules and Compose file are absent. Configure branch protection to require the jobs that apply to your release process. The `Pact Release Gate` workflow runs on `v*` release tags and can be manually dispatched with environment-scoped credentials. Add separate release jobs for image publication, real AWS checks, `terraform plan/apply`, and Kubernetes rollout verification; those actions require environment-specific credentials and approval controls.

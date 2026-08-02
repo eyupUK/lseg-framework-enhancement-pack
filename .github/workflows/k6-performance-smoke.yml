@@ -1,0 +1,61 @@
+name: Scheduled k6 Performance Smoke
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+    inputs:
+      orders_base_url:
+        description: Orders service base URL (overrides the performance environment variable)
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: k6-orders-performance-smoke
+  cancel-in-progress: false
+
+jobs:
+  orders-load-smoke:
+    name: Orders k6 load smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: performance
+    env:
+      ORDERS_BASE_URL: ${{ inputs.orders_base_url || vars.ORDERS_BASE_URL }}
+      K6_NO_USAGE_REPORT: 'true'
+    steps:
+      - uses: actions/checkout@v7
+      - name: Verify performance target configuration
+        shell: bash
+        run: |
+          if [[ -z "${ORDERS_BASE_URL:-}" ]]; then
+            echo "::error title=Performance target missing::Set ORDERS_BASE_URL as a variable in the performance GitHub Environment, or supply it when dispatching this workflow."
+            exit 2
+          fi
+
+          if [[ ! "$ORDERS_BASE_URL" =~ ^https?://[^/]+(/.*)?$ ]]; then
+            echo "::error title=Invalid performance target::ORDERS_BASE_URL must be an HTTP or HTTPS base URL."
+            exit 2
+          fi
+
+          echo "ORDERS_BASE_URL=${ORDERS_BASE_URL%/}" >> "$GITHUB_ENV"
+      - name: Prepare k6 result directory
+        run: mkdir -p performance/k6/results
+      - name: Set up k6
+        uses: grafana/setup-k6-action@v1
+      - name: Run orders load smoke
+        run: >-
+          k6 run
+          --summary-export=performance/k6/results/orders-load-summary.json
+          performance/k6/orders-load.js
+      - name: Upload k6 summary
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: k6-orders-load-summary
+          path: performance/k6/results/orders-load-summary.json
+          if-no-files-found: warn
