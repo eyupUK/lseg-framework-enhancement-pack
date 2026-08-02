@@ -55,7 +55,7 @@ mvn -Denv=dev \
 docker compose down -v
 ```
 
-The CI workflow waits for these endpoints before invoking the API suites. Retain `docker compose logs` on failures; it is the shortest path to distinguish a product failure from a startup/configuration failure.
+When the parent framework is present, the CI workflow waits for these endpoints before invoking the API suites. In the standalone pack, it runs the in-process HTTP component suites and LocalStack integration test instead. Retain `docker compose logs` on failures; it is the shortest path to distinguish a product failure from a startup/configuration failure.
 
 ## Python Lambda Tests
 

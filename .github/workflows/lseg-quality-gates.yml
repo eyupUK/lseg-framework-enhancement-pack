@@ -33,6 +33,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
       - name: Detect parent service framework
         id: parent_framework
         shell: bash
@@ -62,15 +68,14 @@ jobs:
             echo "available=true" >> "$GITHUB_OUTPUT"
           else
             echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=Parent service checks skipped::This overlay does not include the parent service modules or a Compose file."
+            echo "::notice title=Parent service checks unavailable::Running the standalone component and container integration suites instead."
           fi
-      - name: Set up Java
-        if: steps.parent_framework.outputs.available == 'true'
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: '17'
-          cache: maven
+      - name: Run standalone API component and LocalStack integration suites
+        if: steps.parent_framework.outputs.available != 'true'
+        run: >-
+          mvn -B -pl quality-engineering-tests -am
+          -Dtest=OrderInventoryIntegrationTest,OrderApiComponentTest,HttpInventoryGatewayWireMockTest,LocalStackS3IntegrationTest
+          test
       - name: Build service jars
         if: steps.parent_framework.outputs.available == 'true'
         run: mvn -B -DskipTests package -pl services/users-service,services/orders-service
@@ -88,9 +93,6 @@ jobs:
       - name: Observability smoke test
         if: steps.parent_framework.outputs.available == 'true'
         run: mvn -B -pl quality-engineering-tests -Dtest=ObservabilitySmokeTest -Dorders.baseUrl=http://localhost:8081 test
-      - name: Parent service checks not applicable
-        if: steps.parent_framework.outputs.available != 'true'
-        run: echo "Parent service checks are not applicable to the standalone enhancement pack."
       - name: Service logs
         if: ${{ failure() && steps.parent_framework.outputs.available == 'true' }}
         run: docker compose logs
