@@ -2,6 +2,7 @@ package com.example.quality.order;
 
 import com.example.quality.inventory.InventoryComponentServer;
 import io.restassured.http.ContentType;
+import io.restassured.response.ValidatableResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,18 +60,18 @@ class OrderInventoryIntegrationTest {
 
     @Test
     void shouldNotReserveInventoryTwiceForAnIdempotentOrderRetry() {
-        inventoryServer.setAvailableQuantity("SKU-1", 1);
+        inventoryServer.setAvailableQuantity("SKU-1", 3);
 
         createOrder("order-integration-3", "SKU-1", 1, "corr-integration-3")
                 .statusCode(201);
         createOrder("order-integration-3", "SKU-1", 1, "corr-integration-3")
                 .statusCode(201);
 
-        assertEquals(0, inventoryServer.availableQuantity("SKU-1"));
+        assertEquals(2, inventoryServer.availableQuantity("SKU-1"));
         assertEquals(1, inventoryServer.reservationCount());
     }
 
-    private io.restassured.response.ValidatableResponse createOrder(
+    private ValidatableResponse createOrder(
             String orderId,
             String sku,
             int quantity,

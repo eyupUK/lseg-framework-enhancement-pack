@@ -23,6 +23,7 @@ The diagram shows responsibilities, not a deployed topology. In particular, the 
 | Resilience component | `quality-engineering-tests/.../resilience` | Retry count, circuit-open fail-fast behaviour, and half-open recovery | None |
 | AWS integration | `quality-engineering-tests/.../aws` | S3 put/get and correlation metadata through the AWS SDK | Docker and LocalStack |
 | Order/inventory integration | `quality-engineering-tests/.../order` | Order requests cross real HTTP boundaries to reserve stock, handle out-of-stock responses, and preserve idempotency | None |
+| Order/inventory HTTP client | `quality-engineering-tests/.../order/HttpInventoryGatewayWireMockTest` | Exact request shape plus accepted, rejected, malformed, and unexpected upstream responses | WireMock in-process server |
 | Order/inventory Pact | `quality-engineering-tests/.../contract` | Orders sends the documented reservation request and handles accepted and rejected inventory responses | Pact mock server |
 | Service observability | `quality-engineering-tests/.../observability` | Orders health reports `UP` and Prometheus exposes a JVM metric | Running orders service |
 | Lambda unit | `lambda/order-audit/tests` | Handler validation, S3 object content, and S3 metadata | Moto in-process AWS emulation |
@@ -37,6 +38,8 @@ All JVM tests run by default. `ObservabilitySmokeTest` is skipped unless `orders
 
 `InventoryComponentServer` is an in-process test service with atomic stock decrement and idempotent reservation storage. `OrderInventoryIntegrationTest` starts it beside `OrderComponentServer`, ensuring that an accepted order consumes stock, an unavailable reservation yields the order service's `OUT_OF_STOCK` decision, and a retry does not reserve stock twice. `InventoryConsumerPactTest` writes the two orders-to-inventory interactions to `quality-engineering-tests/target/pacts/orders-service-inventory-service.json` for publication or provider verification in the parent release pipeline.
 
+`HttpInventoryGatewayWireMockTest` isolates the client from the in-process service. It asserts the exact reservation payload and checks that `201`/`reserved:true` is accepted, `409`/`reserved:false` is treated as out of stock, and malformed or unexpected responses are surfaced as integration failures. This test layer avoids credentials, rate limits, and mutable data associated with a public weather API while still exercising the outbound HTTP boundary.
+
 ## Quality And Security Gates
 
 The pack treats its automated checks as merge gates. Configure branch protection on `main` to require the checks below; the parent-service checks remain conditionally applicable because this repository does not contain the parent services.
@@ -49,10 +52,11 @@ The pack treats its automated checks as merge gates. Configure branch protection
 | Lambda tests | `LSEG Quality Gates / python-lambda-tests` | Any Moto handler test failure |
 | Terraform validation | `LSEG Quality Gates / terraform-static-validation` | Terraform is unformatted or invalid |
 | Static code analysis | `Qodana / qodana` | Qodana reports any inspection problem |
+| Secret verification | `Security Gates / gitleaks` | Gitleaks finds a secret in the full Git history |
 | Dependency vulnerability scan | `Security Gates / repository-security-scan` | Trivy finds a high or critical vulnerability in a declared Maven dependency |
 | IaC and secret scan | `Security Gates / repository-security-scan` | Trivy finds a high or critical secret or infrastructure misconfiguration |
 
-The security scan examines Maven dependencies plus Terraform, SAM, and Kubernetes manifests. Python requirements are audited separately by `pip-audit` in the Lambda job. The scanners are deliberately configured to fail on high and critical findings, so new exceptions require a documented and reviewed risk decision rather than an inline suppression. This gate does not depend on GitHub's repository-level Dependency Graph setting.
+Gitleaks runs before the remaining security scan and examines the complete Git history, not just the triggering commit. The security scan then examines Maven dependencies plus Terraform, SAM, and Kubernetes manifests. Python requirements are audited separately by `pip-audit` in the Lambda job. The scanners are deliberately configured to fail on high and critical findings, so new exceptions require a documented and reviewed risk decision rather than an inline suppression. Configure `Security Gates / gitleaks` as a required branch-protection check to block merges when it fails.
 
 ### Resilience Behaviour
 

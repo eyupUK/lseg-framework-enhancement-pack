@@ -29,6 +29,7 @@ quality-engineering-tests/src/test/java/com/example/quality/aws/LocalStackS3Inte
 quality-engineering-tests/src/test/java/com/example/quality/observability/ObservabilitySmokeTest.java
 quality-engineering-tests/src/test/java/com/example/quality/inventory/InventoryComponentServer.java
 quality-engineering-tests/src/test/java/com/example/quality/order/OrderInventoryIntegrationTest.java
+quality-engineering-tests/src/test/java/com/example/quality/order/HttpInventoryGatewayWireMockTest.java
 quality-engineering-tests/src/test/java/com/example/quality/resilience/CircuitBreakerBehaviourTest.java
 quality-engineering-tests/src/test/java/com/example/quality/resilience/RetryBehaviourTest.java
 scripts/can-i-deploy.sh

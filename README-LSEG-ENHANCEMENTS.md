@@ -15,10 +15,10 @@ The overlay assumes the parent framework provides:
 |---|---|
 | AWS emulation | Testcontainers and LocalStack S3 integration test |
 | Serverless audit | Python order-audit Lambda, SAM template, and Moto unit tests |
-| Order/inventory component | HTTP inventory reservation service, order HTTP gateway, component integration tests, and Pact consumer contract |
+| Order/inventory component | HTTP inventory reservation service, order HTTP gateway, component integration, WireMock, and Pact consumer contract tests |
 | Resilience | Deterministic Resilience4j circuit-breaker and retry tests |
 | Observability | Actuator/Prometheus smoke test and optional Prometheus/Jaeger stack |
-| Delivery gates | GitHub Actions quality, dependency, secret, and IaC security gates plus a Pact Broker `can-i-deploy` script |
+| Delivery gates | GitHub Actions quality, dependency, Gitleaks secret, and IaC security gates plus a Pact Broker `can-i-deploy` script |
 | Performance | k6 order-create load smoke test with latency and error thresholds |
 | Infrastructure | Terraform S3 bucket and least-privilege Lambda execution role example |
 | Kubernetes | Users and orders Deployments, Services, probes, resources, and Kustomize |
@@ -74,7 +74,7 @@ For complete commands, deployment prerequisites, expected behaviour, and limitat
 
 ## Delivery Model
 
-The GitHub Actions workflows run standalone Java tests, strict Qodana inspection analysis, Python linting/security/dependency audits and tests, Terraform formatting/validation, and Trivy dependency-vulnerability, secret, and IaC scanning on pushes and pull requests to `main`. They run containerised API and observability checks only when the parent service modules and a Compose file are present; otherwise the job reports that those checks are not applicable. They do not deploy AWS resources, apply Kubernetes manifests, run k6, or invoke the Pact deployment gate; wire those steps into an environment-specific release pipeline after configuring credentials, state, image publishing, and Pact Broker access.
+The GitHub Actions workflows run standalone Java tests, strict Qodana inspection analysis, Python linting/security/dependency audits and tests, Terraform formatting/validation, Gitleaks full-history secret verification, and Trivy dependency-vulnerability, secret, and IaC scanning on pushes and pull requests to `main`. They run containerised API and observability checks only when the parent service modules and a Compose file are present; otherwise the job reports that those checks are not applicable. They do not deploy AWS resources, apply Kubernetes manifests, run k6, or invoke the Pact deployment gate; wire those steps into an environment-specific release pipeline after configuring credentials, state, image publishing, and Pact Broker access.
 
 ## Important Limits
 
