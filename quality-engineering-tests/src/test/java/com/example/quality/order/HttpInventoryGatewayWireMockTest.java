@@ -1,5 +1,6 @@
 package com.example.quality.order;
 
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -15,7 +16,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class HttpInventoryGatewayWireMockTest {
+class
+HttpInventoryGatewayWireMockTest {
 
     @RegisterExtension
     static final WireMockExtension inventoryService = WireMockExtension.newInstance()
@@ -71,7 +73,7 @@ class HttpInventoryGatewayWireMockTest {
         return new HttpInventoryGateway(inventoryService.getRuntimeInfo().getHttpBaseUrl());
     }
 
-    private static com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder reservationResponse(
+    private static ResponseDefinitionBuilder reservationResponse(
             int status,
             String body
     ) {
