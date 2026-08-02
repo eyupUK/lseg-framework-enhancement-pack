@@ -12,7 +12,7 @@ Run the quality-test and Lambda commands from this repository root. Run parent-s
 | Terraform validation or apply | Terraform 1.6 or newer and AWS credentials for apply |
 | Kubernetes deployment | `kubectl` with target-cluster access |
 | Performance smoke | k6 |
-| Pact compatibility gate | `pact-broker` CLI and Pact Broker credentials |
+| Pact compatibility gate | `pact-broker-cli` and Pact Broker credentials |
 | SAM deployment | AWS SAM CLI and AWS credentials |
 
 Podman can replace Docker for the container workflows. Configure Testcontainers with the Podman socket as described in [Podman usage](../.devcontainer/PODMAN.md).
@@ -167,6 +167,10 @@ export TARGET_ENVIRONMENT=production
 
 The script exits non-zero if compatibility is unknown or rejected after its configured retries. It is a release compatibility control, not evidence of functional, security, performance, resilience, or infrastructure correctness.
 
+### GitHub Actions Release Gate
+
+`Pact Release Gate` is a manually dispatched workflow. Select the deployment environment, then enter the pacticipant name and the released application version. Configure `PACT_BROKER_BASE_URL` and `PACT_BROKER_TOKEN` as secrets on each corresponding GitHub Environment. The workflow uses that environment, so its configured approval rules apply before the compatibility check runs. A failed compatibility check fails the `Check Pact deployment compatibility` step; place a deployment step after it, or make a deployment job depend on `release-contract-gate`, to enforce the gate.
+
 ## CI Gate Coverage
 
 `.github/workflows/lseg-quality-gates.yml` runs on pushes and pull requests to `main`:
@@ -187,4 +191,4 @@ The script exits non-zero if compatibility is unknown or rejected after its conf
 
 The Lambda job also runs Ruff, Bandit, and `pip-audit` before pytest. Qodana fails its separate workflow when it reports any inspection problem. Require these checks in branch protection after the first successful run; in particular, `Security Gates / gitleaks` must be required to prevent a failed secret scan from being merged.
 
-The Java, Lambda, and Terraform jobs run in this repository. The containerised job detects whether the parent framework's Maven modules and Compose file exist, and emits a successful not-applicable result when they do not. Configure branch protection to require the jobs that apply to your release process. Add separate release jobs for image publication, real AWS checks, `terraform plan/apply`, Kubernetes rollout verification, k6, and `can-i-deploy`; those actions require environment-specific credentials and approval controls.
+The Java, Lambda, and Terraform jobs run in this repository. The containerised job runs the standalone component and LocalStack integration suites when the parent framework's Maven modules and Compose file are absent. Configure branch protection to require the jobs that apply to your release process. The `Pact Release Gate` workflow is manually dispatched with environment-scoped credentials. Add separate release jobs for image publication, real AWS checks, `terraform plan/apply`, Kubernetes rollout verification, and k6; those actions require environment-specific credentials and approval controls.
