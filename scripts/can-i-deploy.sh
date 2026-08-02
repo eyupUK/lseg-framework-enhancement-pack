@@ -7,14 +7,12 @@ set -euo pipefail
 : "${APPLICATION_VERSION:?APPLICATION_VERSION is required}"
 : "${TARGET_ENVIRONMENT:?TARGET_ENVIRONMENT is required}"
 
-command -v pact-broker >/dev/null 2>&1 || {
-  echo "pact-broker CLI is not installed" >&2
+command -v pact-broker-cli >/dev/null 2>&1 || {
+  echo "pact-broker-cli is not installed" >&2
   exit 2
 }
 
-pact-broker can-i-deploy \
-  --broker-base-url "$PACT_BROKER_BASE_URL" \
-  --broker-token "$PACT_BROKER_TOKEN" \
+exec pact-broker-cli can-i-deploy \
   --pacticipant "$PACTICIPANT" \
   --version "$APPLICATION_VERSION" \
   --to-environment "$TARGET_ENVIRONMENT" \
