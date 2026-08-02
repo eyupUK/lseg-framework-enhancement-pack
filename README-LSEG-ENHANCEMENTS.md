@@ -54,7 +54,8 @@ pip install -r lambda/order-audit/requirements-dev.txt
 pytest -q lambda/order-audit/tests
 ```
 
-To verify the running services and the observability contract:
+After applying the pack to the parent framework, verify the running services
+and observability contract from that framework's repository root:
 
 ```bash
 docker compose up -d --build
