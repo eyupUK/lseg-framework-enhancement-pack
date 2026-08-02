@@ -41,6 +41,19 @@ jobs:
       - uses: actions/checkout@v7
       - name: Install Pact Broker CLI
         uses: pact-foundation/pact-broker-cli@v0.8.6
+      - name: Verify Pact Broker configuration
+        env:
+          PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
+          PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+        run: |
+          missing=()
+          [[ -n "$PACT_BROKER_BASE_URL" ]] || missing+=(PACT_BROKER_BASE_URL)
+          [[ -n "$PACT_BROKER_TOKEN" ]] || missing+=(PACT_BROKER_TOKEN)
+
+          if [[ "${#missing[@]}" -gt 0 ]]; then
+            echo "::error title=Pact Broker configuration missing::Add ${missing[*]} as secrets to the selected GitHub Environment."
+            exit 2
+          fi
       - name: Check Pact deployment compatibility
         env:
           PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}

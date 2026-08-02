@@ -54,7 +54,8 @@ pip install -r lambda/order-audit/requirements-dev.txt
 pytest -q lambda/order-audit/tests
 ```
 
-To verify the running services and the observability contract:
+After applying the pack to the parent framework, verify the running services
+and observability contract from that framework's repository root:
 
 ```bash
 docker compose up -d --build
@@ -74,7 +75,7 @@ For complete commands, deployment prerequisites, expected behaviour, and limitat
 
 ## Delivery Model
 
-The GitHub Actions workflows run standalone Java tests, strict Qodana inspection analysis, Python linting/security/dependency audits and tests, Terraform formatting/validation, Gitleaks full-history secret verification, and Trivy dependency-vulnerability, secret, and IaC scanning on pushes and pull requests to `main`. The `containerised-api-tests` job runs the parent service API and observability checks when the parent service modules and a Compose file are present; in this standalone pack, it runs the in-repository HTTP component suites and LocalStack integration test instead. `Pact Release Gate` invokes `can-i-deploy` with environment-scoped Pact Broker credentials when a `v*` release tag is pushed, and can also be dispatched manually before deployment. The workflows do not deploy AWS resources, apply Kubernetes manifests, or run k6; wire those steps into an environment-specific release pipeline after configuring credentials, state, and image publishing.
+The GitHub Actions workflows run standalone Java tests, strict Qodana inspection analysis, Python linting/security/dependency audits and tests, Terraform formatting/validation, Gitleaks full-history secret verification, and Trivy dependency-vulnerability, secret, and IaC scanning on pushes and pull requests to `main`. After a push to `main`, `publish-pact-contracts` publishes the generated consumer contracts to the configured Pact Broker. The `containerised-api-tests` job runs the parent service API and observability checks when the parent service modules and a Compose file are present; in this standalone pack, it runs the in-repository HTTP component suites and LocalStack integration test instead. `Pact Release Gate` invokes `can-i-deploy` with environment-scoped Pact Broker credentials when a `v*` release tag is pushed, and can also be dispatched manually before deployment. The workflows do not deploy AWS resources, apply Kubernetes manifests, or run k6; wire those steps into an environment-specific release pipeline after configuring credentials, state, and image publishing.
 
 ## Important Limits
 

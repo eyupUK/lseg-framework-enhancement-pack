@@ -42,6 +42,11 @@ The observability test is intentionally skipped without `orders.baseUrl`; this m
 
 ## Parent Service And API Checks
 
+Run these commands only from the parent framework's repository root after
+applying this pack. The standalone enhancement pack deliberately has no root
+Compose file, so `docker compose up` or `docker compose down` from this
+repository returns `no configuration file provided`.
+
 ```bash
 docker compose up -d --build
 
@@ -102,7 +107,15 @@ terraform destroy -var='environment=dev'
 
 ## Observability Stack
 
-Start the parent services first, then run the optional monitoring stack:
+The standalone observability stack can run on its own, although it has no
+parent services to scrape in this repository:
+
+```bash
+docker compose -f observability/docker-compose.observability.yml up -d
+```
+
+After applying the pack to the parent framework, start the parent services from
+that framework's repository root before starting the monitoring stack:
 
 ```bash
 docker compose up -d --build
@@ -116,8 +129,15 @@ Prometheus expects the services on host ports 8080 and 8081. On Linux Docker Eng
 
 Stop the stacks when finished:
 
+For the standalone observability stack:
+
 ```bash
 docker compose -f observability/docker-compose.observability.yml down -v
+```
+
+For the parent service stack, run this only from the parent framework root:
+
+```bash
 docker compose down -v
 ```
 
@@ -169,7 +189,16 @@ The script exits non-zero if compatibility is unknown or rejected after its conf
 
 ### GitHub Actions Release Gate
 
-`Pact Release Gate` runs automatically when a tag matching `v*` is pushed and can also be dispatched manually. In either case, it checks `orders-service`, the tagged commit SHA, and the `production` environment unless manual inputs override them. Configure `PACT_BROKER_BASE_URL` and `PACT_BROKER_TOKEN` as secrets on the corresponding GitHub Environment. The workflow uses that environment, so its configured approval rules apply before the compatibility check runs. A failed compatibility check fails the `Check Pact deployment compatibility` step; place a deployment step after it, or make a deployment job depend on `release-contract-gate`, to enforce the gate.
+`Pact Release Gate` runs automatically when a tag matching `v*` is pushed and can also be dispatched manually. In either case, it checks `orders-service`, the tagged commit SHA, and the `production` environment unless manual inputs override them. Before its first run, create a `production` GitHub Environment in **Settings -> Environments**, then add these environment secrets:
+
+| Secret | Value |
+|---|---|
+| `PACT_BROKER_BASE_URL` | HTTPS base URL of the Pact Broker or PactFlow tenant |
+| `PACT_BROKER_TOKEN` | Read/write token that can publish consumer contracts and query deployment compatibility |
+
+On a push to `main`, the `publish-pact-contracts` job generates and publishes the `orders-service` consumer contract before a release tag is created. The workflow uses the selected environment, so its configured approval rules apply before the compatibility check runs. Its configuration checks report any missing secret by name without printing its value. A failed compatibility check fails the `Check Pact deployment compatibility` step; place a deployment step after it, or make a deployment job depend on `release-contract-gate`, to enforce the gate.
+
+Publishing a consumer contract is not sufficient for `can-i-deploy`: the `inventory-service` provider pipeline must retrieve the published Pact, verify it, and publish a successful verification result. It must also record the versions that are deployed to `production`. This standalone pack contains consumer tests only; provider verification belongs to the parent service framework or the inventory-service repository.
 
 ## CI Gate Coverage
 
@@ -178,7 +207,8 @@ The script exits non-zero if compatibility is unknown or rejected after its conf
 | Job | Check |
 |---|---|
 | `java-fast-tests` | Enhancement JVM tests and Surefire report upload |
-| `containerised-api-tests` | Package services, start Compose, health checks, API tests, and observability smoke test |
+| `publish-pact-contracts` | Generates and publishes the orders and dashboard consumer Pact contracts after a push to `main` |
+| `containerised-api-tests` | Parent service Compose/API/observability checks when available; otherwise standalone HTTP component and LocalStack integration tests |
 | `python-lambda-tests` | Pytest/Moto Lambda tests |
 | `terraform-static-validation` | Terraform formatting, backend-free initialization, and validation |
 
@@ -191,4 +221,4 @@ The script exits non-zero if compatibility is unknown or rejected after its conf
 
 The Lambda job also runs Ruff, Bandit, and `pip-audit` before pytest. Qodana fails its separate workflow when it reports any inspection problem. Require these checks in branch protection after the first successful run; in particular, `Security Gates / gitleaks` must be required to prevent a failed secret scan from being merged.
 
-The Java, Lambda, and Terraform jobs run in this repository. The containerised job runs the standalone component and LocalStack integration suites when the parent framework's Maven modules and Compose file are absent. Configure branch protection to require the jobs that apply to your release process. The `Pact Release Gate` workflow is manually dispatched with environment-scoped credentials. Add separate release jobs for image publication, real AWS checks, `terraform plan/apply`, Kubernetes rollout verification, and k6; those actions require environment-specific credentials and approval controls.
+The Java, Lambda, and Terraform jobs run in this repository. The containerised job runs the standalone component and LocalStack integration suites when the parent framework's Maven modules and Compose file are absent. Configure branch protection to require the jobs that apply to your release process. The `Pact Release Gate` workflow runs on `v*` release tags and can be manually dispatched with environment-scoped credentials. Add separate release jobs for image publication, real AWS checks, `terraform plan/apply`, Kubernetes rollout verification, and k6; those actions require environment-specific credentials and approval controls.
