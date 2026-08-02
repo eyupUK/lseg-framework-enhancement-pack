@@ -29,7 +29,7 @@ public class TrainingPactTest {
                 .body(new PactDslJsonBody().stringType("sku", "SKU-1")
                         .integerType("quantity", 2)
                         .stringType("idempotencyKey", "corr-inventory-available")
-                        .stringType("timestamp", Instant.now().toString())
+//                        .stringType("timestamp", Instant.now().toString())
                 )
                 .willRespondWith()
                 .status(201)
