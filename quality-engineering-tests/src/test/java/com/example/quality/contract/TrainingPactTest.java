@@ -9,7 +9,6 @@ import au.com.dius.pact.core.model.annotations.Pact;
 import com.example.quality.order.HttpInventoryGateway;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;

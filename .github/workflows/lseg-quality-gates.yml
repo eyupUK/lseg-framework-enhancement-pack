@@ -43,10 +43,15 @@ jobs:
           distribution: temurin
           java-version: '17'
           cache: maven
-      - name: Generate consumer Pact contracts
+      - name: Generate orders-service to inventory-service Pact
         run: >-
           mvn -B -pl quality-engineering-tests -am
-          -Dtest=InventoryConsumerPactTest,OrdersConsumerPactTest
+          -Dtest=InventoryConsumerPactTest
+          test
+      - name: Generate order-dashboard to orders-service Pact
+        run: >-
+          mvn -B -pl quality-engineering-tests -am
+          -Dtest=OrderDashboardConsumerPactTest
           test
       - name: Install Pact Broker CLI
         uses: pact-foundation/pact-broker-cli@v0.8.6

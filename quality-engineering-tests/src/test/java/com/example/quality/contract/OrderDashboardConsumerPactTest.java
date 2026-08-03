@@ -16,7 +16,7 @@ import static org.hamcrest.Matchers.equalTo;
 
 @PactConsumerTest
 @PactTestFor(providerName = "orders-service")
-class OrdersConsumerPactTest {
+class OrderDashboardConsumerPactTest {
 
     @Pact(provider = "orders-service", consumer = "order-dashboard")
     public V4Pact orderExists(PactDslWithProvider builder) {
