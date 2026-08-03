@@ -1,5 +1,7 @@
 package com.example.quality.order;
 
+import com.example.orders.InventoryGateway;
+import com.example.orders.OrderService;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

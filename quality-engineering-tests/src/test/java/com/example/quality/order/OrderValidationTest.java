@@ -1,5 +1,7 @@
 package com.example.quality.order;
 
+import com.example.orders.OrderRequest;
+import com.example.orders.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

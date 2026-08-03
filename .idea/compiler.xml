@@ -7,6 +7,9 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="quality-engineering-tests" />
+        <module name="orders-service" />
+        <module name="inventory-service" />
+        <module name="users-service" />
       </profile>
     </annotationProcessing>
   </component>

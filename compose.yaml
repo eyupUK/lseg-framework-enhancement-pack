@@ -1,0 +1,28 @@
+services:
+  users-service:
+    build:
+      context: .
+      dockerfile: services/users-service/Dockerfile
+    image: sample/users-service:local
+    ports:
+      - "8080:8080"
+
+  inventory-service:
+    build:
+      context: .
+      dockerfile: services/inventory-service/Dockerfile
+    image: sample/inventory-service:local
+    ports:
+      - "8082:8082"
+
+  orders-service:
+    build:
+      context: .
+      dockerfile: services/orders-service/Dockerfile
+    image: sample/orders-service:local
+    depends_on:
+      - inventory-service
+    environment:
+      INVENTORY_SERVICE_BASE_URL: http://inventory-service:8082
+    ports:
+      - "8081:8081"
