@@ -1,1 +1,4 @@
 /quality-engineering-tests/target/
+/services/inventory-service/target/
+/services/orders-service/target/
+/services/users-service/target/
