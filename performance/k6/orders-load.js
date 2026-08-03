@@ -35,7 +35,7 @@ export default function () {
   const valid = check(response, {
     'created successfully': (r) => r.status === 200,
     'returns order id': (r) => {
-      try { return Number(r.json('order.id')) > 0; } catch (_) { return false; }
+      try { return /^order-\d+$/.test(r.json('order.id')); } catch (_) { return false; }
     },
   });
 
