@@ -202,7 +202,7 @@ The script exits non-zero if compatibility is unknown or rejected after its conf
 
 On a push to `main`, the `publish-pact-contracts` job generates and publishes the `orders-service` consumer contract before a release tag is created. The workflow uses the selected environment, so its configured approval rules apply before the compatibility check runs. Its configuration checks report any missing secret by name without printing its value. A failed compatibility check fails the `Check Pact deployment compatibility` step; place a deployment step after it, or make a deployment job depend on `release-contract-gate`, to enforce the gate.
 
-Publishing a consumer contract is not sufficient for `can-i-deploy`: the `inventory-service` provider pipeline must retrieve the published Pact, verify it, and publish a successful verification result. It must also record the versions that are deployed to `production`. This standalone pack contains consumer tests only; provider verification belongs to the parent service framework or the inventory-service repository.
+Publishing a consumer contract is not sufficient for `can-i-deploy`: the `inventory-service` provider pipeline must retrieve the published Pact, apply its provider state, verify it against the runnable inventory service, and publish a successful verification result. It must record the version only after a successful production rollout. `LSEG Quality Gates` performs provider verification after consumer Pact publication; use the release workflows for the deployment and recording stages described in the [release workflow](RELEASE-WORKFLOW.md).
 
 ## CI Gate Coverage
 

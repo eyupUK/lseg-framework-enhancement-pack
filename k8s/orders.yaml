@@ -25,8 +25,8 @@ spec:
           ports:
             - containerPort: 8081
           env:
-            - name: USERS_SERVICE_BASEURL
-              value: http://users-service:8080
+            - name: INVENTORY_SERVICE_BASE_URL
+              value: http://inventory-service:8082
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness

@@ -2,7 +2,7 @@
 
 ## Purpose And Boundaries
 
-The pack extends a pre-existing Java microservices test framework. Its root Maven reactor runs the added quality-test module by itself; the parent framework remains responsible for service implementation, service Compose configuration, API contracts, Pact provider verification, WireMock stubs, and Allure reporting. This repository adds focused examples around those boundaries rather than a second application platform.
+The pack now includes runnable Java users, inventory, and orders services. The quality module supplies consumer, provider, component, integration, resilience, observability, and infrastructure tests against those services.
 
 ```text
 users service :8080 <---- orders service :8081 <---- API and k6 tests
@@ -88,7 +88,7 @@ The handler does not deduplicate at-least-once delivery. A caller that resends t
 
 ### Kubernetes
 
-The Kustomize base deploys two replicas each of users and orders, cluster-internal Services, CPU/memory requests and limits, and Actuator readiness/liveness probes. Workloads run as UID/GID `10001` with a default seccomp profile, no Linux capabilities, no privilege escalation, and a read-only root filesystem; each receives an `emptyDir` mount at `/tmp`. It references `sample/users-service:local` and `sample/orders-service:local`; substitute images published to a registry accessible to the target cluster that can run as this non-root user. The parent applications must expose `/actuator/health/readiness` and `/actuator/health/liveness` before these manifests can become ready.
+The Kustomize base deploys two replicas each of users, inventory, and orders, cluster-internal Services, CPU/memory requests and limits, and readiness/liveness probes. Workloads run as UID/GID `10001` with a default seccomp profile, no Linux capabilities, no privilege escalation, and a read-only root filesystem; each receives an `emptyDir` mount at `/tmp`. It references local development images; the release workflows replace the orders and inventory images with immutable GHCR references before rollout. The Java services expose the required health endpoints.
 
 ### Observability
 

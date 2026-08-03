@@ -1,5 +1,7 @@
 package com.example.quality.order;
 
+import com.example.orders.HttpInventoryGateway;
+import com.example.orders.OrderService;
 import com.example.quality.inventory.InventoryComponentServer;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;

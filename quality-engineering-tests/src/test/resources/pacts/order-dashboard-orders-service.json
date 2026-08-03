@@ -1,0 +1,71 @@
+{
+  "consumer": {
+    "name": "order-dashboard"
+  },
+  "interactions": [
+    {
+      "description": "a request for an existing order",
+      "key": "74c0b07c",
+      "pending": false,
+      "providerStates": [
+        {
+          "name": "order order-1001 exists"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/orders/order-1001"
+      },
+      "response": {
+        "body": {
+          "content": {
+            "orderId": "order-1001",
+            "status": "CREATED",
+            "total": 19.98
+          },
+          "contentType": "application/json",
+          "encoded": false
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ]
+        },
+        "matchingRules": {
+          "body": {
+            "$.orderId": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.total": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "decimal"
+                }
+              ]
+            }
+          }
+        },
+        "status": 200
+      },
+      "transport": "http",
+      "type": "Synchronous/HTTP"
+    }
+  ],
+  "metadata": {
+    "pact-jvm": {
+      "version": "4.6.21"
+    },
+    "pactSpecification": {
+      "version": "4.0"
+    }
+  },
+  "provider": {
+    "name": "orders-service"
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "consumer": {
+    "name": "orders-service"
+  },
+  "interactions": [
+    {
+      "description": "a request to reserve SKU-1",
+      "key": "a847959b",
+      "pending": false,
+      "providerStates": [
+        {
+          "name": "inventory reservation is evaluated"
+        }
+      ],
+      "request": {
+        "body": {
+          "content": {
+            "idempotencyKey": "corr-inventory-available",
+            "quantity": 2,
+            "sku": "SKU-1"
+          },
+          "contentType": "application/json",
+          "encoded": false
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ]
+        },
+        "matchingRules": {
+          "body": {
+            "$.quantity": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            }
+          }
+        },
+        "method": "POST",
+        "path": "/inventory/reservations"
+      },
+      "response": {
+        "body": {
+          "content": {
+            "reserved": true
+          },
+          "contentType": "application/json",
+          "encoded": false
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ]
+        },
+        "status": 201
+      },
+      "transport": "http",
+      "type": "Synchronous/HTTP"
+    },
+    {
+      "description": "a request to reserve SKU-2",
+      "key": "a84795a6",
+      "pending": false,
+      "providerStates": [
+        {
+          "name": "inventory reservation is evaluated"
+        }
+      ],
+      "request": {
+        "body": {
+          "content": {
+            "idempotencyKey": "corr-inventory-unavailable",
+            "quantity": 3,
+            "sku": "SKU-2"
+          },
+          "contentType": "application/json",
+          "encoded": false
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ]
+        },
+        "matchingRules": {
+          "body": {
+            "$.quantity": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            }
+          }
+        },
+        "method": "POST",
+        "path": "/inventory/reservations"
+      },
+      "response": {
+        "body": {
+          "content": {
+            "reserved": false
+          },
+          "contentType": "application/json",
+          "encoded": false
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json"
+          ]
+        },
+        "status": 409
+      },
+      "transport": "http",
+      "type": "Synchronous/HTTP"
+    }
+  ],
+  "metadata": {
+    "pact-jvm": {
+      "version": "4.6.21"
+    },
+    "pactSpecification": {
+      "version": "4.0"
+    }
+  },
+  "provider": {
+    "name": "inventory-service"
+  }
+}

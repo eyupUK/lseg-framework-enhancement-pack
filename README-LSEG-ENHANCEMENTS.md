@@ -71,16 +71,17 @@ For complete commands, deployment prerequisites, expected behaviour, and limitat
 
 - [Framework guide](docs/FRAMEWORK-GUIDE.md): component boundaries, contracts, test coverage, and production hardening considerations.
 - [Runbook](docs/RUNBOOK.md): local verification, CI gates, observability, infrastructure, Kubernetes, Pact, and performance commands.
+- [Release workflow](docs/RELEASE-WORKFLOW.md): consumer/provider deployment, rollback, and Pact deployment-recording controls.
 - [Podman usage](.devcontainer/PODMAN.md): rootless Podman and Testcontainers socket configuration.
 
 ## Delivery Model
 
-The GitHub Actions workflows run standalone Java tests, strict Qodana inspection analysis, Python linting/security/dependency audits and tests, Terraform formatting/validation, Gitleaks full-history secret verification, and Trivy dependency-vulnerability, secret, and IaC scanning on pushes and pull requests to `main`. After a push to `main`, `publish-pact-contracts` publishes the generated consumer contracts to the configured Pact Broker. The `containerised-api-tests` job runs the parent service API and observability checks when the parent service modules and a Compose file are present; in this standalone pack, it runs the in-repository HTTP component suites and LocalStack integration test instead. `Scheduled k6 Performance Smoke` runs the orders load scenario each Monday against the configured performance environment and can also be dispatched manually. `Pact Release Gate` invokes `can-i-deploy` with environment-scoped Pact Broker credentials when a `v*` release tag is pushed, and can also be dispatched manually before deployment. The workflows do not deploy AWS resources or apply Kubernetes manifests; wire those steps into an environment-specific release pipeline after configuring credentials, state, and image publishing.
+The GitHub Actions workflows run Java service and quality tests, strict Qodana inspection analysis, Python linting/security/dependency audits and tests, Terraform formatting/validation, Gitleaks full-history secret verification, and Trivy dependency-vulnerability, secret, and IaC scanning on pushes and pull requests to `main`. A main-branch consumer Pact publication triggers real inventory-service provider verification and result publication. `containerised-api-tests` builds the local Compose service stack, verifies its health and observability endpoints, and creates an order through the live HTTP boundary. `Scheduled k6 Performance Smoke` runs the orders load scenario each Monday against the configured performance environment and can also be dispatched manually. `Orders Consumer Release`, `Inventory Provider Release`, and `Orders Service Rollback` provide approval-gated Kubernetes rollout, operational verification, and Pact deployment recording. AWS infrastructure deployment remains environment-specific.
 
 ## Important Limits
 
 - LocalStack and Moto validate client integration and handler behaviour, not all AWS IAM, quota, event-delivery, or service semantics.
 - The Terraform files create an audit bucket and a Lambda execution role only. They do not package or create a Lambda function.
 - The SAM template is a separate deployment route and currently relies on the Lambda runtime's bundled `boto3`; add a production `requirements.txt` if a pinned SDK version is required.
-- Kubernetes manifests reference placeholder local image names and assume probe endpoints are enabled by the parent Spring Boot applications.
+- Kubernetes manifests use local development image names; release workflows replace them with immutable GHCR image references before rollout.
 - The audit handler records an event; it is not a complete duplicate-delivery solution. See the [framework guide](docs/FRAMEWORK-GUIDE.md#serverless-audit-contract) before connecting it to an at-least-once event source.

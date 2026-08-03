@@ -18,6 +18,11 @@
     <jackson.version>2.18.8</jackson.version>
     <pact.version>4.6.21</pact.version>
     <wiremock.version>3.13.2</wiremock.version>
+    <pactbroker.url></pactbroker.url>
+    <pactbroker.auth.token></pactbroker.auth.token>
+    <pact.provider.version></pact.provider.version>
+    <pact.provider.branch></pact.provider.branch>
+    <pact.verifier.publishResults>false</pact.verifier.publishResults>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -31,6 +36,18 @@
     </dependencies>
   </dependencyManagement>
   <dependencies>
+    <dependency>
+      <groupId>com.example</groupId>
+      <artifactId>orders-service</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.example</groupId>
+      <artifactId>inventory-service</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
@@ -92,9 +109,16 @@
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
       <version>${jackson.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>au.com.dius.pact.consumer</groupId>
+      <artifactId>junit5</artifactId>
+      <version>${pact.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>au.com.dius.pact.provider</groupId>
       <artifactId>junit5</artifactId>
       <version>${pact.version}</version>
       <scope>test</scope>
@@ -116,6 +140,11 @@
           <systemPropertyVariables>
             <pact.rootDir>${project.build.directory}/pacts</pact.rootDir>
             <pact_do_not_track>true</pact_do_not_track>
+            <pactbroker.url>${pactbroker.url}</pactbroker.url>
+            <pactbroker.auth.token>${pactbroker.auth.token}</pactbroker.auth.token>
+            <pact.provider.version>${pact.provider.version}</pact.provider.version>
+            <pact.provider.branch>${pact.provider.branch}</pact.provider.branch>
+            <pact.verifier.publishResults>${pact.verifier.publishResults}</pact.verifier.publishResults>
           </systemPropertyVariables>
         </configuration>
       </plugin>

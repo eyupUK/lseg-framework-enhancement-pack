@@ -1,5 +1,6 @@
 package com.example.quality.order;
 
+import com.example.orders.HttpInventoryGateway;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import org.junit.jupiter.api.Test;

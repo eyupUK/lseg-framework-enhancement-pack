@@ -6,7 +6,7 @@ import au.com.dius.pact.consumer.junit5.PactConsumerTest;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.V4Pact;
 import au.com.dius.pact.core.model.annotations.Pact;
-import com.example.quality.order.HttpInventoryGateway;
+import com.example.orders.HttpInventoryGateway;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;

@@ -1,0 +1,12 @@
+com/example/orders/OrdersApplication$LoadOrderRequest.class
+com/example/orders/OrdersApplication.class
+com/example/orders/OrderDecision.class
+com/example/orders/OrderService$CachedOrder.class
+com/example/orders/OrderDecision$Status.class
+com/example/orders/HttpInventoryGateway$ReservationResponse.class
+com/example/orders/HttpInventoryGateway$ReservationRequest.class
+com/example/orders/HttpInventoryGateway.class
+com/example/orders/InventoryGateway.class
+com/example/orders/IdempotencyConflictException.class
+com/example/orders/OrderService.class
+com/example/orders/OrderRequest.class

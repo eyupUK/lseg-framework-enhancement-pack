@@ -1,0 +1,87 @@
+name: Orders Service Rollback
+
+run-name: Orders rollback ${{ inputs.application_version }} to production
+
+on:
+  workflow_dispatch:
+    inputs:
+      application_version:
+        description: Exact previously released orders-service Pact version
+        required: true
+        type: string
+      service_image:
+        description: Immutable image reference for that exact previous artefact
+        required: true
+        type: string
+      confirm_data_event_infrastructure_compatibility:
+        description: Confirm database, event, and infrastructure compatibility has been assessed
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: orders-service-production
+  cancel-in-progress: false
+
+jobs:
+  can-i-deploy-previous-version:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    steps:
+      - uses: actions/checkout@v7
+      - name: Require compatibility assessment approval
+        run: |
+          [[ "${{ inputs.confirm_data_event_infrastructure_compatibility }}" == "true" ]] || {
+            echo "::error title=Rollback compatibility not confirmed::Assess database, event, and infrastructure compatibility before rolling back."
+            exit 2
+          }
+      - uses: pact-foundation/pact-broker-cli@v0.8.6
+      - name: Check previous orders-service compatibility
+        env:
+          PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
+          PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+          PACTICIPANT: orders-service
+          APPLICATION_VERSION: ${{ inputs.application_version }}
+          TARGET_ENVIRONMENT: production
+        run: ./scripts/can-i-deploy.sh
+
+  deploy-verify-and-record:
+    needs: can-i-deploy-previous-version
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+    env:
+      KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+      K8S_NAMESPACE: ${{ vars.K8S_NAMESPACE || 'default' }}
+      ORDERS_BASE_URL: ${{ vars.ORDERS_BASE_URL }}
+      PACT_BROKER_BASE_URL: ${{ secrets.PACT_BROKER_BASE_URL }}
+      PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+      PACTICIPANT: orders-service
+      APPLICATION_VERSION: ${{ inputs.application_version }}
+      TARGET_ENVIRONMENT: production
+    steps:
+      - uses: actions/checkout@v7
+      - name: Configure Kubernetes access
+        run: ./scripts/configure-kubeconfig.sh
+      - name: Deploy named previous orders-service artefact
+        env:
+          K8S_MANIFEST: k8s/orders.yaml
+          SERVICE_NAME: orders-service
+          SERVICE_IMAGE: ${{ inputs.service_image }}
+        run: ./scripts/deploy-kubernetes-service.sh
+      - name: Verify rollout health and metrics
+        env:
+          SERVICE_BASE_URL: ${{ vars.ORDERS_BASE_URL }}
+        run: ./scripts/verify-http-service.sh
+      - name: Verify critical order operation
+        run: ./scripts/verify-orders-operation.sh
+      - uses: pact-foundation/pact-broker-cli@v0.8.6
+      - name: Record restored orders-service deployment
+        run: ./scripts/record-pact-deployment.sh
+      - name: Surface post-rollback monitoring requirement
+        run: >-
+          echo "::notice title=Post-rollback monitoring::Monitor errors, latency, queues, and traces in the production observability system for this restored version."
